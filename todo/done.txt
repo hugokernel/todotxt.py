@@ -1,0 +1,14 @@
+Gérer le filtrage en cliquant sur un projet / context +todo
++todo Au survol d'un context / projet, mettre en surbrillance les autres lignes du même type
+Coucou due:2014-01-01 faire ceci !
+(A) Todo terminable +todo
+2014-09-29 (A) Todo éditable en ligne +todo !
+2014-09-29 (A) Ajout de nouvelle ligne
+2014-10-02 (A) Push pour recevoir les modifications du fichier en live +todo
+2014-10-02 (D) Gérer les due +todo due:2014-10-01
+2014-10-02 Mettre un lien en bas pointant vers la doc du format https://github.com/ginatrapani/todo.txt-cli/wiki/The-Todo.txt-Format
+2014-10-02 (D) Remplacer les dates par "demain", "après demain", etc... +todo
+2014-10-03 Bug, lors de l'ajout d'une nouvelle ligne, la date est ajoutée +bug
+2014-10-03 Si on met un + ou un @ seul, c'est pris comme un project ou context +bug
+2014-10-03 (E) Rendre cliquable les liens, ex: https://github.com/hugokernel/todotxt.py
+2014-10-04 (C) 2014-07-31 Batch de 4 +BBip due:2014-09-15

@@ -1,0 +1,16 @@
+2014-08-04 Super test ! +test
+(D) Lors de l'écriture, ajouter des liens cliquables pour ajouter des project, context, date, etc...
+(B) Pouvoir spécifier plusieurs fichier todo, si la variable de conf est un tuple, afficher un select sur le gui +todo
+(E) Rendre cliquable les liens, ex: https://github.com/hugokernel/todotxt.py
+Classer les context et project !
+Test +test @coucou @hello !
+Gérer le filtrage en cliquant sur un projet / context +todo
++todo Au survol d'un context / projet, mettre en surbrillance les autres lignes du même type
+Coucou due:2014-10-02 faire ceci !!
+(A) Todo terminable +todo
+2014-09-29 (A) Todo éditable en ligne +todo !
+2014-09-29 (A) Ajout de nouvelle ligne
+2014-10-02 (A) Push pour recevoir les modifications du fichier en live +todo
+2014-10-02 (D) Gérer les due +todo due:2014-10-01
+2014-10-02 Mettre un lien en bas pointant vers la doc du format https://github.com/ginatrapani/todo.txt-cli/wiki/The-Todo.txt-Format
+2014-10-02 (D) Remplacer les dates par "demain", "après demain", etc... +todo

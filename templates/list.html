@@ -1,0 +1,24 @@
+<ul class="list-group" id="todo-list">
+    <li class="list-group-item" id="line-new">
+        <span id="todo-new" class="todo" data-text="New line" data-html="<em>New line</em>"><em>New line</em></span>
+    </li>
+    {% for todo in todos %}
+        <li class="list-group-item
+        {# if todo.priority and todo.priority == 'A' %}priority-a{% endif #}
+        {% for project in todo.projects %}
+            project-{{ project }}
+        {% endfor %}
+        {% for context in todo.contexts %}
+            context-{{ context }}
+        {% endfor %}
+        " id="line-{{ todo.line }}">
+            {% include 'line.html' %}
+            <a href="{{ rootUrl }}/mark_as_done/{{ todo.line }}/{{ todo.hash }}" class="link-action link-done" data-line="{{ todo.line }}">
+                <span class="glyphicon glyphicon-ok"></span>
+            </a>
+            <a href="{{ rootUrl }}/delete/{{ todo.line }}/{{ todo.hash }}" class="link-action link-delete" data-line="{{ todo.line }}">
+                <span class="glyphicon glyphicon-remove"></span>
+            </a>
+        </li>
+    {% endfor %}
+</ul>

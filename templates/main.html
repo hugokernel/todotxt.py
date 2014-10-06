@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="description" content="">
+    <meta name="keywords" content="">
+    <meta name="author" content="hugokernel">
+    <title></title>
+
+<!-- Bootstrap core CSS -->
+<link href="/static/css/bootstrap.min.css" rel="stylesheet">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="/static/css/bootstrap-theme.min.css">
+<link rel="stylesheet" href="/static/css/bootstrap-editable.css">
+
+<script src="/static/js/jquery-1.11.1.min.js"></script>
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="/static/js/bootstrap.min.js"></script>
+<script src="/static/js/bootstrap-editable.min.js"></script>
+
+<!--
+<script src="/static/js/typeahead.jquery.js"></script>
+<script src="/static/js/typeahead.js"></script>
+<script src="/static/js/typeaheadjs.js"></script>
+<script src="/static/js/bootstrap3-typeahead.js"></script>
+-->
+<script src="/static/js/bootstrap-typeahead.js"></script>
+<script src="/static/js/rangy-core.js"></script>
+<script src="/static/js/caret-position.js"></script>
+<script src="/static/js/bootstrap-tagautocomplete.js"></script>
+
+<style>
+
+.container-fluid {
+    margin-top: 20px;
+}
+
+.context {
+    font-style: italic;
+    color: green;
+}
+
+.project {
+    font-weight: bold;
+    color: red;
+}
+
+.project:hover, .context:hover {
+
+}
+
+.list-group-item:hover {
+    background-color: #FFE;
+}
+
+.date {
+    color: #CCCC00;
+}
+
+.priority {
+    font-weight: bold;
+    color: violet;
+}
+
+.priority-a {
+    background-color: #FCC;
+}
+
+.priority-a.highlight {
+    background-color: #FCC;
+}
+
+.highlight {
+    background-color: #FFC !important;
+}
+
+.link-action {
+    float: right;
+    display: block;
+    margin-right: 10px;
+}
+
+.error {
+    margin: 2px;
+    padding: 5px;
+}
+
+.selected {
+    background-color: #FFC;
+}
+
+.todo input, .todoinput {
+    width: 100% !important;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    background-color: #EEE;
+}
+
+#line-new {
+    background-color: #FFA;
+}
+
+#footer {
+    position: fixed;
+    bottom: 0px;
+    right: 10px;
+}
+
+.editable-click {
+    border-bottom: none !important;
+}
+
+.editable-input, .editable-container.editable-inline, .editableform .control-group {
+    width: 100% !important;
+}
+
+</style>
+
+<script type="text/javascript">
+
+/*
+var substringMatcher = function(strs) {
+return function findMatches(q, cb) {
+var matches, substrRegex;
+ 
+// an array that will be populated with substring matches
+matches = [];
+ 
+// regex used to determine if a string contains the substring `q`
+substrRegex = new RegExp(q, 'i');
+ 
+// iterate through the pool of strings and for any string that
+// contains the substring `q`, add it to the `matches` array
+$.each(strs, function(i, str) {
+if (substrRegex.test(str)) {
+// the typeahead jQuery plugin expects suggestions to a
+// JavaScript object, refer to typeahead docs for more info
+matches.push({ value: str });
+}
+});
+ 
+cb(matches);
+};
+};
+ 
+var states = ['Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California',
+'Colorado', 'Connecticut', 'Delaware', 'Florida', 'Georgia', 'Hawaii',
+'Idaho', 'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana',
+'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota',
+'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire',
+'New Jersey', 'New Mexico', 'New York', 'North Carolina', 'North Dakota',
+'Ohio', 'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island',
+'South Carolina', 'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont',
+'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming'
+];
+ 
+*/
+
+$(document).ready(function() {
+
+/*
+$('#the-basics .typeahead').typeahead({
+//$('todoinput').typeahead({
+hint: true,
+highlight: true,
+minLength: 1
+},
+{
+name: 'states',
+displayKey: 'value',
+data: states
+});
+*/
+
+    /*
+    $('.todoinput').typeahead({
+        source: [ 'aaaa', 'bbbb', 'cccc' ]   
+    })
+    */
+
+    $.fn.editable.defaults.mode = 'inline';
+    $.fn.editable.defaults.ajaxOptions = {type: "GET"};
+
+    var ws = new WebSocket("ws://localhost:8080/websocket");
+    ws.onopen = function() {
+        ws.send("Hello, world");
+    };
+
+    ws.onmessage = function (evt) {
+        if (evt.data == 'update') {
+            reload()
+        }
+    };
+
+    $('.link-action').hide();
+
+    new_options = {
+        inputclass: 'todoinput',
+        clear: false,
+        showbuttons: false,
+        //type: 'text',
+        pk:     function() {
+            return 'pk';
+        },
+        url:    '/api/new',
+        params: function(params) {
+            return { data: params.value };
+        },
+        value: '',
+        source: [ 
+            { value: 'aa', text: 'AA' },
+            { value: 'bb', text: 'BB' },
+        ],
+        success: function(response, newValue) {
+            reload();
+        },
+    };
+
+    edit_options = {
+        inputclass: 'todoinput',
+        clear: false,
+        showbuttons: false,
+        //type: 'text',
+        pk:     function() {
+            return 'pk';
+        },
+        //url:    '/api/new',
+        url:    function(params) {
+            var d = new $.Deferred;
+
+            line = $(this).data('line');
+            hash = $(this).data('hash');
+            $.ajax({
+                url:    '/api/edit/' + line + '/' + hash,// + '/' + encodeURIComponent(value),
+                data:   {
+                    data: params.data
+                },
+                success:    function(data) {
+                    d.resolve();
+                }
+            });
+
+            return d.promise();
+        },
+        submit: function(options) {
+            console.info(options);
+        },
+        params: function(params) {
+            return { data: params.value };
+        },
+        /*
+        value: function(t) {
+            console.info('t');
+            console.info(this);   
+        },
+        source: [ 
+            { value: 'aa', text: 'AA' },
+            { value: 'bb', text: 'BB' },
+        ],
+        success: function(response, newValue) {
+            reload();
+        },
+        */
+        /*
+        typeahead: {
+        name: 'country',
+        local: [
+        { value: 'ru', tokens: ['Russia'] },
+        { value: 'gb', tokens: ['Great Britain'] },
+        { value: 'us', tokens: ['United States'] }
+        ],
+        template: function (item) {
+            return item.tokens[0] + ' (' + item.value + ')';
+        }
+    }
+    */
+    };
+
+/*
+(function ($, undefined) {
+    $.fn.getCursorPosition = function() {
+        var el = $(this).get(0);
+        var pos = 0;
+        if('selectionStart' in el) {
+            pos = el.selectionStart;
+        } else if('selection' in document) {
+            el.focus();
+            var Sel = document.selection.createRange();
+            var SelLength = document.selection.createRange().text.length;
+            Sel.moveStart('character', -el.value.length);
+            pos = Sel.text.length - SelLength;
+        }
+        return pos;
+    }
+})(jQuery);
+*/
+/*
+            $('div#example').tagautocomplete({
+              source: ['@ann', '@bill', '@casey']
+            });
+*/
+    live = function() {
+        $('#todo-new').editable(new_options);
+        $('.todo:not(#todo-new)').editable(edit_options);
+
+        $('.todo:not(#todo-new)').on('shown', function(e, editable) {
+            console.info('open');
+            console.info(editable.input.$input);
+            $(editable.input.$input).tagautocomplete({
+                source: [ '+toto', '@paf' ],
+                character: '@+',
+                matcher: function(item) {
+                    console.info(item);
+                    return true;
+                }
+            })
+        });
+        /*
+        $('.todo:not(#todo-new)').on('shown', function(e, editable) {
+            //console.info(editable.input.$input);
+            $(editable.input.$input).typeahead({
+                source: function() {
+                    return [ '+toto', '@paf' ]
+                },
+                updater: function (item) {
+                    console.info($(this.$element).getCursorPosition())
+                    pos = $(this.$element).getCursorPosition();
+                    start = this.query.substr(0, pos);
+                    end = this.query.substr(pos);
+                    return start + item.substr(1) + end;//this.$element.val() + item;
+                    //return item;
+                },
+                matcher__: function( item ) {
+                    //console.info(item);
+                    //console.info(this);
+                    return true;
+                }
+            })
+            //editable.input.$input.val('overwriting value of input..');
+        });
+        */
+    };
+
+    $('#todo-content').on('mouseenter', '#todo-list li', function() {
+        $(this).children('.link-action').show();
+    });
+
+    $('#todo-content').on('mouseleave', '#todo-list li', function() {
+        $(this).children('.link-action').hide();
+    });
+
+    $('#todo-content, #projects, #contexts').on('mouseenter', '.context, .project', function() {
+        $('.' + $(this).data('type') + '-' + $(this).data('value').substr(1)).addClass('highlight');
+    });
+    
+    $('#todo-content, #projects, #contexts').on('mouseleave', '.context, .project', function() {
+        $('.' + $(this).data('type') + '-' + $(this).data('value').substr(1)).removeClass('highlight');
+    });
+
+    getRoot = function() {
+        return '/' + ($('#todo-selector').find(":selected").val());
+    };
+
+    $('#todo-content').on('click', '.link-delete', function(e) {
+        if (confirm('Are you sure ?')) {
+            line = $('#todo-' + $(this).data('line')).data('line');
+            hash = $('#todo-' + $(this).data('line')).data('hash');
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            $.ajax({
+                url:    '/delete/' + line + '/' + hash,
+                success:    function(data) {
+                    reload()
+                }
+            });
+        }
+
+        return false;
+    });
+
+    $('#todo-content').on('click', '.link-done', function(e) {
+        if (confirm('Are you sure ?')) {
+            line = $('#todo-' + $(this).data('line')).data('line');
+            hash = $('#todo-' + $(this).data('line')).data('hash');
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            $.ajax({
+                url:    '/mark_as_done/' + line + '/' + hash,
+                success:    function(data) {
+                    reload()
+                }
+            });
+        }
+
+        return false;
+    });
+
+    reload = function() {
+        refreshList();
+        refreshContexts();
+        refreshProjects();
+    };
+
+    refreshList = function() {
+        $.ajax({
+            url:    '/list/get',
+            success:    function(data) {
+                $('#todo-list').replaceWith(data);
+                live();
+                $('.link-action').hide();
+            }
+        });
+    };
+
+    refreshContexts = function() {
+        $.ajax({
+            url:    '/contexts/get',
+            success:    function(data) {
+                $('#contexts').replaceWith(data);
+                live();
+            }
+        });
+    };
+
+    refreshProjects = function() {
+        $.ajax({
+            url:    '/projects/get',
+            success:    function(data) {
+                $('#projects').replaceWith(data);
+                live();
+            }
+        });
+    };
+
+/*
+    edit_callback = function(value, settings) {
+        line = $(this).data('line');
+        hash = $(this).data('hash');
+        $.ajax({
+            url:    '/api/edit/' + line + '/' + hash,// + '/' + encodeURIComponent(value),
+            data:   {
+                data: value
+            },
+            success:    function(data) {
+                reload()
+            }
+        });
+    };
+
+    edit_options = {
+        type: 'autocomplete',
+        xxx: {
+            //source: [ 'abc', 'def' ]
+            //source: [ "c++", "java", "php", "coldfusion", "javascript", "asp", "ruby" ],
+        },
+        onedit: function(settings) {
+            $(this).html($(this).data('text'));
+            return true;
+        },
+        onblur: function() {
+            line = $(this).data('line')
+            $(this).html($(this).data('html'))
+            $('#todo-' + line).editable(edit_callback, edit_options);
+            this.editing = false;
+            return true;
+        },
+        select: true,
+        //submit: 'ok',
+        //style: 'display: inline'
+    };
+
+    new_callback = function(value, settings) {
+        $.ajax({
+            url:    '/api/new',
+            data:   {
+                data: value
+            },
+            success:    function(data) {
+                reload();
+            }
+        });
+    };
+
+    new_options = {
+        onedit: function(settings) {
+            $(this).html('');
+            return true;
+        },
+        onblur: function() {
+            line = $(this).data('line')
+            $(this).html($(this).data('html'))
+            $('#todo-' + line).editable(new_callback, edit_options);
+            this.editing = false;
+            return true;
+        },
+        select: true,
+        //submit: 'ok',
+        //style: 'display: inline'
+    }
+*/
+
+    $('#todo-selector').change(function() {
+        window.location = '/' + $(this).val() + '/';
+    });
+
+
+    live();
+});
+
+</script>
+
+</head>
+
+<body>
+
+<!--
+<input class="typeahead" type="text" data-provide="typeahead">
+
+<script>
+$(document).ready(function() {
+    $('.typeahead').typeahead({
+        source: [ 'aaaa', 'bbbb', 'cccc' ]   
+    })
+});
+</script>
+-->
+
+<!--
+<div id="the-basics">
+<input class="typeahead" type="text" placeholder="States of USA">
+</div>
+-->
+
+<div class="container-fluid">
+
+    <div class="row">
+        <div class="col-xs-2">
+            {% include 'contexts.html' %}
+            {% include 'projects.html' %}
+
+            {% if error_message %}
+                <p class="error bg-danger">
+                    {{ error_message }}
+                </p>
+            {% endif %}
+
+            <select id="todo-selector">
+                {% for name, dir in todo_files %}
+                    <option value="{{ loop.index0 }}" {% if todo_selected == loop.index0 %}selected="selected"{% endif %}>{{ name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-xs-10" id="todo-content">
+            {% include 'list.html' %}
+        </div>
+    </div>
+
+</div>
+
+<p id="footer">
+    <a href="https://github.com/hugokernel/todotxt.py">GitHub / todotxt.py</a> |
+    <a href="https://github.com/ginatrapani/todo.txt-cli/wiki/The-Todo.txt-Format">The Todo.txt format</a>
+</p>
+
+</body>
+
+</html>
