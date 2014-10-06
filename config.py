@@ -15,3 +15,11 @@ TODO_FILES = (
     ( "Pouf",       './todo/pouf.txt' ),
 )
 
+'''
+TODO_FILES = (
+    ( './todo/todo.txt' ),
+    ( '~/todo.txt'),
+    ( './todo/pouf.txt' ),
+)
+'''
+

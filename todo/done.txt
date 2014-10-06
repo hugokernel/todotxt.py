@@ -12,3 +12,7 @@ Coucou due:2014-01-01 faire ceci !
 2014-10-03 Si on met un + ou un @ seul, c'est pris comme un project ou context +bug
 2014-10-03 (E) Rendre cliquable les liens, ex: https://github.com/hugokernel/todotxt.py
 2014-10-04 (C) 2014-07-31 Batch de 4 +BBip due:2014-09-15
+2014-10-06 (D) Lors de l'écriture, ajouter des liens cliquables pour ajouter des project, context, si on écrit un + ou un @, compléter avec les contexts ou projects existants, etc...
+2014-10-06 (B) Pouvoir spécifier plusieurs fichier todo, si la variable de conf est un tuple, afficher un select sur le gui +todo
+2014-10-06 (F) Gestion des lignes à rallonge (ex: A compter du dépôt du colis en bureau de poste, ce numéro vous permettra de suivre à tout moment votre Colissimo A compter du dépôt du colis en bureau de poste, ce numéro vous permettra de suivre à tout moment votre Colissimo I)
+2014-10-06 (G) Permettre le stockage dans le même fichier des done préfixés avec 'x'

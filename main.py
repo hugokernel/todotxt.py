@@ -39,7 +39,7 @@ class TodoHashError:
 
 class Todo:
 
-    todo_file = TODO_FILE
+    todo_file = None
     done_file = './todo/done.txt'
     #path = '/Users/hugo/Documents/Dropbox/Todo'
 
@@ -47,6 +47,14 @@ class Todo:
     projects = []
 
     content = ''
+
+    '''
+    When mark done :
+    - 0: Mark as done (x prefixed) in todo.txt
+    - 1: Save in done.txt
+    - 2: Both
+    '''
+    ACTION_WHEN_DONE = 1
 
     def read(self, file=None):
         with codecs.open(os.path.expanduser(file if file else self.todo_file), "r", "utf-8") as f:
@@ -120,6 +128,11 @@ class Todo:
         _contexts = _projects = []
         for text in content:
 
+            # Skip done
+            if text[0] == 'x':
+                count += 1
+                continue
+
             line = self.generate(text, count)
 
             if contexts:
@@ -162,7 +175,7 @@ class Todo:
 
             if statusx and statusy and dx == dy:
                 statusx, dx = date(x.text)
-                statusy, dy = date(y.text)               
+                statusy, dy = date(y.text)
                 return 1 if dx < dy else -1
             else:
                 return 1 if dx > dy else -1
@@ -195,15 +208,30 @@ class Todo:
     def mark_as_done(self, line):
         content = self.read()
 
-        deleted_line = content[line]
-        del content[line]
+        content[line] = content[line].strip() + '\n'
 
-        done = self.read(self.done_file)
-        done.append(str(datetime.date.today()) + ' ' + deleted_line)
+        if self.ACTION_WHEN_DONE in (1, 2):
+            # Save in done.txt
+            deleted_line = content[line]
+            if self.ACTION_WHEN_DONE == 1:
+                del content[line]
 
-        # First, save done file
-        with AtomicFile(self.done_file, "w") as f:
-            f.write(''.join(done).encode('utf-8'))
+        if self.ACTION_WHEN_DONE in (0, 2):
+            # Mark as done
+            content[line] = 'x ' + content[line]
+
+        '''
+        - 0: Mark as done
+        - 1: Save in done.txt
+        - 2: Both
+        '''
+        if self.ACTION_WHEN_DONE in (1, 2):
+            done = self.read(self.done_file)
+            done.append(str(datetime.date.today()) + ' ' + deleted_line)
+
+            # First, save done file
+            with AtomicFile(self.done_file, "w") as f:
+                f.write(''.join(done).encode('utf-8'))
 
         # Save todo file !
         with AtomicFile(self.todo_file, "w") as f:
@@ -265,15 +293,32 @@ todo_selected = 0
 def getRoot():
     return '/' + str(todo_selected)
 
-def todoloader(func):
-    global t
-    def wrapper(*args, **kwargs):
-        global todo_selected
-        if 'todo' in kwargs:
-            _, t.todo_file = TODO_FILES[int(kwargs['todo'])]
-            todo_selected = int(kwargs['todo'])
-        return func(**kwargs)
-    return wrapper
+class Helper:
+
+    @staticmethod
+    def loader(func):
+        global t
+        def wrapper(*args, **kwargs):
+            global todo_selected
+            if 'todo' in kwargs:
+                item = TODO_FILES[int(kwargs['todo'])]
+                if type(item) == str:
+                    t.todo_file = item
+                else:
+                    _, t.todo_file = item
+                todo_selected = int(kwargs['todo'])
+            return func(**kwargs)
+        return wrapper
+
+    @staticmethod
+    def list():
+        out = list()
+        for item in TODO_FILES:
+            if type(item) == tuple:
+                out.append(item)
+            else:
+                out.append((item, item))
+        return out
 
 @route('/static/js/<path:path>')
 def javascripts(path):
@@ -294,16 +339,16 @@ def stylesheets(path):
 @route('/', name='home')
 @route('/<todo>/')
 @jinja2_view('main.html', template_lookup=['templates'], getRoot=getRoot)
-@todoloader
+@Helper.loader
 def home(todo=None):
     #return dict(zip(['todos', 'contexts', 'projects'], t.get_data())).update({ 'todo_files': ('paf', 'pif') })
     todos, contexts, projects = t.get_data()
-    return { 'todos': todos, 'contexts': contexts, 'projects': projects, 'todo_files': TODO_FILES, 'todo_selected': todo_selected }
+    return { 'todos': todos, 'contexts': contexts, 'projects': projects, 'todo_files': Helper.list(), 'todo_selected': todo_selected }
 
 @route('/list/get', name='listget')
 @route('/<todo>/list/get')
 @jinja2_view('list.html', template_lookup=['templates'], getRoot=getRoot)
-@todoloader
+@Helper.loader
 def list_get(todo=None):
     #return { 'todos': [ line.__dict__ for line in t.load() ]}#, 'contexts': t.contexts, 'projects': t.projects }
     return dict(zip(['todos', 'contexts', 'projects'], t.get_data()))
@@ -312,7 +357,7 @@ def list_get(todo=None):
 @route('/contexts/get', name='contextsget')
 @route('/<todo>/contexts/get')
 @jinja2_view('contexts.html', template_lookup=['templates'])
-@todoloader
+@Helper.loader
 def contexts_get(todo=None):
     global t
     t.load()
@@ -321,7 +366,7 @@ def contexts_get(todo=None):
 @route('/projects/get', name='projectsget')
 @route('/<todo>/projects/get')
 @jinja2_view('projects.html', template_lookup=['templates'])
-@todoloader
+@Helper.loader
 def projects_get(todo=None):
     global t
     t.load()
@@ -335,7 +380,7 @@ def projects_get(todo=None):
 @route('/filter/<filters>', name='filter')
 @route('/<todo>/filter/<filters>')
 @jinja2_view('main.html', template_lookup=['templates'])
-@todoloader
+@Helper.loader
 def filter(filters, todo=None):
     if filters[0] == '@':
         data = t.load(contexts=[ filters[1:] ])
@@ -351,7 +396,7 @@ def is_ajax():
 @route('/api/edit/<line:int>/<hash>', name='edit')
 @route('/<todo>/api/edit/<line:int>/<hash>')
 @jinja2_view('line.html', template_lookup=['templates'])
-@todoloader
+@Helper.loader
 def edit(line, hash, todo=None):
     error_message = todo = ''
     try:
@@ -362,14 +407,14 @@ def edit(line, hash, todo=None):
 
 @route('/mark_as_done/<line:int>/<hash>', name='mark_as_done')
 @route('/<todo>/mark_as_done/<line:int>/<hash>')
-@todoloader
+@Helper.loader
 def mark_as_done(line, hash, todo=None):
     error_message = ''
     try:
         t.mark_as_done(line, hash=hash)
     except TodoHashError:
         error_message = 'Line not found !'
-
+    print 'err', error_message
     if is_ajax():
         return { 'status': 0 } if not error_message else { 'status': 1, 'error_message': error_message }
     else:
@@ -377,7 +422,7 @@ def mark_as_done(line, hash, todo=None):
 
 @route('/delete/<line:int>/<hash>', name='delete')
 @route('/<todo>/delete/<line:int>/<hash>')
-@todoloader
+@Helper.loader
 def delete(line, hash, todo=None):
 
     error_message = ''
@@ -394,9 +439,8 @@ def delete(line, hash, todo=None):
 @route('/api/new', name='new')#, method=['GET', 'POST'])
 @route('/<todo>/api/new')
 @jinja2_view('line.html', template_lookup=['templates'])
-@todoloader
+@Helper.loader
 def new(todo=None):
-    print request.query.get('data')
     todo = t.new(request.query.get('data'))
     return { 'todo': todo }
 

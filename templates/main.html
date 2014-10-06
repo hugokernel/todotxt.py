@@ -21,12 +21,6 @@
 <script src="/static/js/bootstrap-editable.min.js"></script>
 <script src="/static/js/bootstrap3-typeahead.js"></script>
 
-<!--
-<script src="/static/js/typeahead.jquery.js"></script>
-<script src="/static/js/typeahead.js"></script>
-<script src="/static/js/typeaheadjs.js"></script>
--->
-
 <style>
 
 .container-fluid {
@@ -119,8 +113,6 @@
 
 $(document).ready(function() {
 
-
-
     $.fn.editable.defaults.mode = 'inline';
     $.fn.editable.defaults.ajaxOptions = {type: "GET"};
 
@@ -134,6 +126,37 @@ $(document).ready(function() {
             reload()
         }
     };
+
+    function extractor(query) {
+        var result = /([^ ]+)$/.exec(query);
+        if(result && result[1])
+            return result[1].trim();
+        return '';
+    }
+
+    typeaheadoptions = {
+        source: function() {
+            data = []
+            $('#projects span.project, #contexts span.context').each(function(item) {
+                data.push($(this).data('value'));
+            })
+            return data;
+        },
+        updater: function(item) {
+            return this.$element.val().replace(/[^\ ]*$/,'')+item;
+        },
+        matcher: function (item) {
+          var tquery = extractor(this.query);
+          if(!tquery) return false;
+          return ~item.toLowerCase().indexOf(tquery.toLowerCase())
+        },
+        highlighter: function (item) {
+          var query = extractor(this.query).replace(/[\-\[\]{}()*+?.,\\\^$|#\s]/g, '\\$&')
+          return item.replace(new RegExp('(' + query + ')', 'ig'), function ($1, match) {
+            return '<strong>' + match + '</strong>'
+          })
+        }
+    }
 
     $('.link-action').hide();
 
@@ -158,39 +181,6 @@ $(document).ready(function() {
             reload();
         },
     };
-
-    typeaheadoptions = {
-        source: function() {
-            data = []
-            $('#projects span.project, #contexts span.context').each(function(item) {
-                projects.push($(this).data('value'));
-            })
-            return data;
-        },
-        updater: function(item) {
-            return this.$element.val().replace(/[^\ ]*$/,'')+item;
-        },
-        matcher: function (item) {
-          var tquery = extractor(this.query);
-          if(!tquery) return false;
-          return ~item.toLowerCase().indexOf(tquery.toLowerCase())
-        },
-        highlighter: function (item) {
-          
-          var query = extractor(this.query).replace(/[\-\[\]{}()*+?.,\\\^$|#\s]/g, '\\$&')
-          console.info(query);
-          return item.replace(new RegExp('(' + query + ')', 'ig'), function ($1, match) {
-            return '<strong>' + match + '</strong>'
-          })
-        }
-    }
-
-    function extractor(query) {
-        var result = /([^ ]+)$/.exec(query);
-        if(result && result[1])
-            return result[1].trim();
-        return '';
-    }
         
     edit_options = {
         inputclass: 'todoinput',
@@ -224,32 +214,9 @@ $(document).ready(function() {
         params: function(params) {
             return { data: params.value };
         },
-        /*
-        value: function(t) {
-            console.info('t');
-            console.info(this);   
-        },
-        source: [ 
-            { value: 'aa', text: 'AA' },
-            { value: 'bb', text: 'BB' },
-        ],
         success: function(response, newValue) {
             reload();
         },
-        */
-        /*
-        typeahead: {
-        name: 'country',
-        local: [
-        { value: 'ru', tokens: ['Russia'] },
-        { value: 'gb', tokens: ['Great Britain'] },
-        { value: 'us', tokens: ['United States'] }
-        ],
-        template: function (item) {
-            return item.tokens[0] + ' (' + item.value + ')';
-        }
-    }
-    */
     };
 
 /*

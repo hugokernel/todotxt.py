@@ -1,8 +1,2 @@
-2014-08-04 Super test ! +test
-(D) Lors de l'écriture, ajouter des liens cliquables pour ajouter des project, context, date, si on écrit un + ou un @, compléter avec les contexts ou projects existants, etc...
-(B) Pouvoir spécifier plusieurs fichier todo, si la variable de conf est un tuple, afficher un select sur le gui +todo
-(G) Permettre le stockage dans le même fichier des done préfixés avec 'x'
 Classer les context et project !!
-Test +test @coucou @hello !! ab
-(F) Gestion des lignes à rallonge (ex: A compter du dépôt du colis en bureau de poste, ce numéro vous permettra de suivre à tout moment votre Colissimo A compter du dépôt du colis en bureau de poste, ce numéro vous permettra de suivre à tout moment votre Colissimo I)
-New line added ! +Alabama @California
+(D) Une interface de configuration dans l'app
