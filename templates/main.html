@@ -19,17 +19,13 @@
 <!-- Latest compiled and minified JavaScript -->
 <script src="/static/js/bootstrap.min.js"></script>
 <script src="/static/js/bootstrap-editable.min.js"></script>
+<script src="/static/js/bootstrap3-typeahead.js"></script>
 
 <!--
 <script src="/static/js/typeahead.jquery.js"></script>
 <script src="/static/js/typeahead.js"></script>
 <script src="/static/js/typeaheadjs.js"></script>
-<script src="/static/js/bootstrap3-typeahead.js"></script>
 -->
-<script src="/static/js/bootstrap-typeahead.js"></script>
-<script src="/static/js/rangy-core.js"></script>
-<script src="/static/js/caret-position.js"></script>
-<script src="/static/js/bootstrap-tagautocomplete.js"></script>
 
 <style>
 
@@ -121,65 +117,9 @@
 
 <script type="text/javascript">
 
-/*
-var substringMatcher = function(strs) {
-return function findMatches(q, cb) {
-var matches, substrRegex;
- 
-// an array that will be populated with substring matches
-matches = [];
- 
-// regex used to determine if a string contains the substring `q`
-substrRegex = new RegExp(q, 'i');
- 
-// iterate through the pool of strings and for any string that
-// contains the substring `q`, add it to the `matches` array
-$.each(strs, function(i, str) {
-if (substrRegex.test(str)) {
-// the typeahead jQuery plugin expects suggestions to a
-// JavaScript object, refer to typeahead docs for more info
-matches.push({ value: str });
-}
-});
- 
-cb(matches);
-};
-};
- 
-var states = ['Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California',
-'Colorado', 'Connecticut', 'Delaware', 'Florida', 'Georgia', 'Hawaii',
-'Idaho', 'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana',
-'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota',
-'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire',
-'New Jersey', 'New Mexico', 'New York', 'North Carolina', 'North Dakota',
-'Ohio', 'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island',
-'South Carolina', 'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont',
-'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming'
-];
- 
-*/
-
 $(document).ready(function() {
 
-/*
-$('#the-basics .typeahead').typeahead({
-//$('todoinput').typeahead({
-hint: true,
-highlight: true,
-minLength: 1
-},
-{
-name: 'states',
-displayKey: 'value',
-data: states
-});
-*/
 
-    /*
-    $('.todoinput').typeahead({
-        source: [ 'aaaa', 'bbbb', 'cccc' ]   
-    })
-    */
 
     $.fn.editable.defaults.mode = 'inline';
     $.fn.editable.defaults.ajaxOptions = {type: "GET"};
@@ -219,6 +159,39 @@ data: states
         },
     };
 
+    typeaheadoptions = {
+        source: function() {
+            data = []
+            $('#projects span.project, #contexts span.context').each(function(item) {
+                projects.push($(this).data('value'));
+            })
+            return data;
+        },
+        updater: function(item) {
+            return this.$element.val().replace(/[^\ ]*$/,'')+item;
+        },
+        matcher: function (item) {
+          var tquery = extractor(this.query);
+          if(!tquery) return false;
+          return ~item.toLowerCase().indexOf(tquery.toLowerCase())
+        },
+        highlighter: function (item) {
+          
+          var query = extractor(this.query).replace(/[\-\[\]{}()*+?.,\\\^$|#\s]/g, '\\$&')
+          console.info(query);
+          return item.replace(new RegExp('(' + query + ')', 'ig'), function ($1, match) {
+            return '<strong>' + match + '</strong>'
+          })
+        }
+    }
+
+    function extractor(query) {
+        var result = /([^ ]+)$/.exec(query);
+        if(result && result[1])
+            return result[1].trim();
+        return '';
+    }
+        
     edit_options = {
         inputclass: 'todoinput',
         clear: false,
@@ -307,6 +280,8 @@ data: states
         $('.todo:not(#todo-new)').editable(edit_options);
 
         $('.todo:not(#todo-new)').on('shown', function(e, editable) {
+            $(editable.input.$input).typeahead(typeaheadoptions);
+            /*
             console.info('open');
             console.info(editable.input.$input);
             $(editable.input.$input).tagautocomplete({
@@ -317,6 +292,7 @@ data: states
                     return true;
                 }
             })
+            */
         });
         /*
         $('.todo:not(#todo-new)').on('shown', function(e, editable) {
