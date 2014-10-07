@@ -11,7 +11,7 @@ from bottle import get, route, request, run, template, static_file, jinja2_view,
 
 from lib.atomicfile import AtomicFile
 
-from config import TODO_FILE, TODO_FILES
+from config import TODO_FILE, TODO_FILES, HOST, PORT
 
 class TodoLine:
     text = None
@@ -56,8 +56,11 @@ class Todo:
     '''
     ACTION_WHEN_DONE = 1
 
+    def getFile(self, file=None):
+        return os.path.expanduser(file if file else self.todo_file)
+
     def read(self, file=None):
-        with codecs.open(os.path.expanduser(file if file else self.todo_file), "r", "utf-8") as f:
+        with codecs.open(self.getFile(file), "r", "utf-8") as f:
             content = f.readlines()
         return content
 
@@ -230,11 +233,11 @@ class Todo:
             done.append(str(datetime.date.today()) + ' ' + deleted_line)
 
             # First, save done file
-            with AtomicFile(self.done_file, "w") as f:
+            with AtomicFile(self.getFile(self.done_file), "w") as f:
                 f.write(''.join(done).encode('utf-8'))
 
         # Save todo file !
-        with AtomicFile(self.todo_file, "w") as f:
+        with AtomicFile(self.getFile(), "w") as f:
             f.write(''.join(content).encode('utf-8'))
 
     @verif_hash
@@ -244,7 +247,7 @@ class Todo:
         content[line] = data.decode('utf-8').strip() + '\n'
 
         # Save todo file !
-        with AtomicFile(self.todo_file, "w") as f:
+        with AtomicFile(self.getFile(self.todo_file), "w") as f:
             f.write(''.join(content).encode('utf-8'))
 
         return self.generate(content[line], line)
@@ -264,7 +267,7 @@ class Todo:
         # + str(datetime.date.today())
         content.append(priority + ' ' + data + '\n')
 
-        with AtomicFile(self.todo_file, "a") as f:
+        with AtomicFile(self.getFile(), "a") as f:
             f.write(''.join(content).encode('utf-8'))
 
         return self.generate(data)
@@ -276,7 +279,7 @@ class Todo:
         del(content[line])
 
         # Save todo file !
-        with AtomicFile(self.todo_file, "w") as f:
+        with AtomicFile(self.getFile(), "w") as f:
             f.write(''.join(content).encode('utf-8'))
 
         return True
@@ -289,6 +292,7 @@ t = Todo()
 #exit()
 
 todo_selected = 0
+todo_name = ''
 
 def getRoot():
     return '/' + str(todo_selected)
@@ -299,14 +303,16 @@ class Helper:
     def loader(func):
         global t
         def wrapper(*args, **kwargs):
-            global todo_selected
+            global todo_selected, todo_name
             if 'todo' in kwargs:
                 item = TODO_FILES[int(kwargs['todo'])]
                 if type(item) == str:
                     t.todo_file = item
+                    name = ''
                 else:
-                    _, t.todo_file = item
+                    name, t.todo_file = item
                 todo_selected = int(kwargs['todo'])
+                todo_name = name
             return func(**kwargs)
         return wrapper
 
@@ -343,7 +349,7 @@ def stylesheets(path):
 def home(todo=None):
     #return dict(zip(['todos', 'contexts', 'projects'], t.get_data())).update({ 'todo_files': ('paf', 'pif') })
     todos, contexts, projects = t.get_data()
-    return { 'todos': todos, 'contexts': contexts, 'projects': projects, 'todo_files': Helper.list(), 'todo_selected': todo_selected }
+    return { 'todos': todos, 'contexts': contexts, 'projects': projects, 'todo_files': Helper.list(), 'todo_selected': todo_selected, 'todo_name': todo_name }
 
 @route('/list/get', name='listget')
 @route('/<todo>/list/get')
@@ -479,9 +485,9 @@ if False:
             #else:
             #    break
 
-    run(host='localhost', port=8080, server=GeventWebSocketServer)
+    run(host=HOST, port=PORT, server=GeventWebSocketServer)
 else:
-    run(host='localhost', port=8080)
+    run(host=HOST, port=PORT)
 
 '''
 @route('/websocket')

@@ -16,6 +16,14 @@
             <a href="{{ rootUrl }}/mark_as_done/{{ todo.line }}/{{ todo.hash }}" class="link-action link-done" data-line="{{ todo.line }}">
                 <span class="glyphicon glyphicon-ok"></span>
             </a>
+            <a href="" class="link-action link-undo" data-line="{{ todo.line }}">
+                <span class="glyphicon glyphicon-repeat"></span>
+            </a>
+            <!--
+            <a href="{{ rootUrl }}/mark_as_done/{{ todo.line }}/{{ todo.hash }}" class="link-action link-done" data-line="{{ todo.line }}">
+                <span class="glyphicon glyphicon-ok"></span>
+            </a>
+            -->
             <a href="{{ rootUrl }}/delete/{{ todo.line }}/{{ todo.hash }}" class="link-action link-delete" data-line="{{ todo.line }}">
                 <span class="glyphicon glyphicon-remove"></span>
             </a>

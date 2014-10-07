@@ -1,7 +1,9 @@
-<ul id="projects" class="list-group">
-    {% for project in projects %}
-        <li class="list-group-item {% if project in filters %}selected{% endif %} project-{{ project }}">
-            <a href="{% if project in filters %}/{% else %}/filter/+{{ project }}{% endif %}"><span class="project" data-type="project" data-value="+{{ project }}">+{{ project }}</span></a>
-        </li>
-    {% endfor %}
-</ul>
+{% if projects %}
+    <ul id="projects" class="list-group">
+        {% for project in projects %}
+            <li class="list-group-item {% if project in filters %}selected{% endif %} project-{{ project }}">
+                <a href="{% if project in filters %}/{% else %}/filter/+{{ project }}{% endif %}"><span class="project" data-type="project" data-value="+{{ project }}">+{{ project }}</span></a>
+            </li>
+        {% endfor %}
+    </ul>
+{% endif %}

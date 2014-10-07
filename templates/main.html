@@ -66,6 +66,10 @@
     background-color: #FFC !important;
 }
 
+.deleted {
+    background-color: #DDD !important;
+}
+
 .link-action {
     float: right;
     display: block;
@@ -107,6 +111,14 @@
     width: 100% !important;
 }
 
+.link-undo, .link-undo span {
+    display: none;
+}
+
+li.deleted a, li.deleted .link-action span {
+    display: none;
+}
+
 </style>
 
 <script type="text/javascript">
@@ -125,6 +137,43 @@ $(document).ready(function() {
         if (evt.data == 'update') {
             reload()
         }
+    };
+
+    reload = function() {
+        refreshList();
+        refreshContexts();
+        refreshProjects();
+    };
+
+    refreshList = function() {
+        $.ajax({
+            url:    '/list/get',
+            success:    function(data) {
+                $('#todo-list').replaceWith(data);
+                live();
+                $('.link-action').hide();
+            }
+        });
+    };
+
+    refreshContexts = function() {
+        $.ajax({
+            url:    '/contexts/get',
+            success:    function(data) {
+                $('#contexts').replaceWith(data);
+                live();
+            }
+        });
+    };
+
+    refreshProjects = function() {
+        $.ajax({
+            url:    '/projects/get',
+            success:    function(data) {
+                $('#projects').replaceWith(data);
+                live();
+            }
+        });
     };
 
     function extractor(query) {
@@ -219,72 +268,15 @@ $(document).ready(function() {
         },
     };
 
-/*
-(function ($, undefined) {
-    $.fn.getCursorPosition = function() {
-        var el = $(this).get(0);
-        var pos = 0;
-        if('selectionStart' in el) {
-            pos = el.selectionStart;
-        } else if('selection' in document) {
-            el.focus();
-            var Sel = document.selection.createRange();
-            var SelLength = document.selection.createRange().text.length;
-            Sel.moveStart('character', -el.value.length);
-            pos = Sel.text.length - SelLength;
-        }
-        return pos;
-    }
-})(jQuery);
-*/
-/*
-            $('div#example').tagautocomplete({
-              source: ['@ann', '@bill', '@casey']
-            });
-*/
     live = function() {
         $('#todo-new').editable(new_options);
         $('.todo:not(#todo-new)').editable(edit_options);
 
-        $('.todo:not(#todo-new)').on('shown', function(e, editable) {
+        $('#todo-new, .todo:not(#todo-new)').on('shown', function(e, editable) {
             $(editable.input.$input).typeahead(typeaheadoptions);
-            /*
-            console.info('open');
-            console.info(editable.input.$input);
-            $(editable.input.$input).tagautocomplete({
-                source: [ '+toto', '@paf' ],
-                character: '@+',
-                matcher: function(item) {
-                    console.info(item);
-                    return true;
-                }
-            })
-            */
         });
-        /*
-        $('.todo:not(#todo-new)').on('shown', function(e, editable) {
-            //console.info(editable.input.$input);
-            $(editable.input.$input).typeahead({
-                source: function() {
-                    return [ '+toto', '@paf' ]
-                },
-                updater: function (item) {
-                    console.info($(this.$element).getCursorPosition())
-                    pos = $(this.$element).getCursorPosition();
-                    start = this.query.substr(0, pos);
-                    end = this.query.substr(pos);
-                    return start + item.substr(1) + end;//this.$element.val() + item;
-                    //return item;
-                },
-                matcher__: function( item ) {
-                    //console.info(item);
-                    //console.info(this);
-                    return true;
-                }
-            })
-            //editable.input.$input.val('overwriting value of input..');
-        });
-        */
+
+        highlight();
     };
 
     $('#todo-content').on('mouseenter', '#todo-list li', function() {
@@ -295,13 +287,17 @@ $(document).ready(function() {
         $(this).children('.link-action').hide();
     });
 
-    $('#todo-content, #projects, #contexts').on('mouseenter', '.context, .project', function() {
-        $('.' + $(this).data('type') + '-' + $(this).data('value').substr(1)).addClass('highlight');
-    });
-    
-    $('#todo-content, #projects, #contexts').on('mouseleave', '.context, .project', function() {
-        $('.' + $(this).data('type') + '-' + $(this).data('value').substr(1)).removeClass('highlight');
-    });
+    highlight = function() {
+        $('#todo-content, #projects, #contexts').on('mouseenter', '.context, .project', function() {
+            $('.' + $(this).data('type') + '-' + $(this).data('value').substr(1)).addClass('highlight');
+        });
+        
+        $('#todo-content, #projects, #contexts').on('mouseleave', '.context, .project', function() {
+            $('.' + $(this).data('type') + '-' + $(this).data('value').substr(1)).removeClass('highlight');
+        });
+    };
+
+    highlight();
 
     getRoot = function() {
         return '/' + ($('#todo-selector').find(":selected").val());
@@ -326,6 +322,7 @@ $(document).ready(function() {
         return false;
     });
 
+    /*
     $('#todo-content').on('click', '.link-done', function(e) {
         if (confirm('Are you sure ?')) {
             line = $('#todo-' + $(this).data('line')).data('line');
@@ -344,110 +341,46 @@ $(document).ready(function() {
 
         return false;
     });
+    */
 
-    reload = function() {
-        refreshList();
-        refreshContexts();
-        refreshProjects();
-    };
+    var undos = []
 
-    refreshList = function() {
-        $.ajax({
-            url:    '/list/get',
-            success:    function(data) {
-                $('#todo-list').replaceWith(data);
-                live();
-                $('.link-action').hide();
-            }
-        });
-    };
+    $('#todo-content').on('click', '.link-done', function(e) {
+        $(this).hide();
+        $(this).parent('li').addClass('deleted');
+        $(this).parent('li').find('.link-undo, .link-undo span').show();
 
-    refreshContexts = function() {
-        $.ajax({
-            url:    '/contexts/get',
-            success:    function(data) {
-                $('#contexts').replaceWith(data);
-                live();
-            }
-        });
-    };
+        var line = $('#todo-' + $(this).data('line')).data('line');
+        var hash = $('#todo-' + $(this).data('line')).data('hash');
 
-    refreshProjects = function() {
-        $.ajax({
-            url:    '/projects/get',
-            success:    function(data) {
-                $('#projects').replaceWith(data);
-                live();
-            }
-        });
-    };
+        undos[line] = setTimeout(function() {
 
-/*
-    edit_callback = function(value, settings) {
-        line = $(this).data('line');
-        hash = $(this).data('hash');
-        $.ajax({
-            url:    '/api/edit/' + line + '/' + hash,// + '/' + encodeURIComponent(value),
-            data:   {
-                data: value
-            },
-            success:    function(data) {
-                reload()
-            }
-        });
-    };
+            $('#line-' + line).hide('slow', function() {
 
-    edit_options = {
-        type: 'autocomplete',
-        xxx: {
-            //source: [ 'abc', 'def' ]
-            //source: [ "c++", "java", "php", "coldfusion", "javascript", "asp", "ruby" ],
-        },
-        onedit: function(settings) {
-            $(this).html($(this).data('text'));
-            return true;
-        },
-        onblur: function() {
-            line = $(this).data('line')
-            $(this).html($(this).data('html'))
-            $('#todo-' + line).editable(edit_callback, edit_options);
-            this.editing = false;
-            return true;
-        },
-        select: true,
-        //submit: 'ok',
-        //style: 'display: inline'
-    };
+                e.preventDefault();
+                e.stopPropagation();
 
-    new_callback = function(value, settings) {
-        $.ajax({
-            url:    '/api/new',
-            data:   {
-                data: value
-            },
-            success:    function(data) {
-                reload();
-            }
-        });
-    };
+                $.ajax({
+                    url:    '/mark_as_done/' + line + '/' + hash,
+                    success:    function(data) {
+                        reload()
+                    }
+                });
 
-    new_options = {
-        onedit: function(settings) {
-            $(this).html('');
-            return true;
-        },
-        onblur: function() {
-            line = $(this).data('line')
-            $(this).html($(this).data('html'))
-            $('#todo-' + line).editable(new_callback, edit_options);
-            this.editing = false;
-            return true;
-        },
-        select: true,
-        //submit: 'ok',
-        //style: 'display: inline'
-    }
-*/
+            });
+        }, 3000);
+
+        return false;
+    });
+
+    $('#todo-content').on('click', '.link-undo', function(e) {
+        var line = $('#todo-' + $(this).data('line')).data('line');
+        clearTimeout(undos[line]);
+
+        //$(this).hide();
+        $(this).parent('li').removeClass('deleted');
+        $(this).parent('li').find('.link-undo, .link-undo span').hide();
+    });
 
     $('#todo-selector').change(function() {
         window.location = '/' + $(this).val() + '/';
@@ -494,11 +427,27 @@ $(document).ready(function() {
                 </p>
             {% endif %}
 
+            <div class="dropdown">
+                <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown">
+                    Selection: {{ todo_name }}
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
+                    {% for name, dir in todo_files %}
+                        <li role="presentation" class="{% if todo_selected == loop.index0 %}disabled{% endif %}">
+                            <a role="menuitem" tabindex="-1" href="/{{ loop.index0 }}/">{{ name }}</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            {#
             <select id="todo-selector">
                 {% for name, dir in todo_files %}
                     <option value="{{ loop.index0 }}" {% if todo_selected == loop.index0 %}selected="selected"{% endif %}>{{ name }}</option>
                 {% endfor %}
             </select>
+            #}
         </div>
         <div class="col-xs-10" id="todo-content">
             {% include 'list.html' %}

@@ -11,8 +11,8 @@ TODO_FILE = (
 
 TODO_FILES = (
     ( 'Todo app',   './todo/todo.txt' ),
+    ( "Test",       './todo/pouf.txt' ),
     ( 'Mine',       '~/todo.txt'),
-    ( "Pouf",       './todo/pouf.txt' ),
 )
 
 '''
@@ -22,4 +22,7 @@ TODO_FILES = (
     ( './todo/pouf.txt' ),
 )
 '''
+
+HOST = '0.0.0.0'
+PORT = 8080
 

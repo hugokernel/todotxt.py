@@ -1,7 +1,9 @@
-<ul id="contexts" class="list-group">
-    {% for context in contexts %}
-        <li class="list-group-item {% if context in filters %}selected{% endif %} context-{{ context }}">
-            <a href="{% if context in filters %}/{% else %}/filter/@{{ context }}{% endif %}"><span class="context" data-type="context" data-value="@{{ context }}">@{{ context }}</span></a>
-        </li>
-    {% endfor %}
-</ul>
+{% if contexts %}
+    <ul id="contexts" class="list-group">
+        {% for context in contexts %}
+            <li class="list-group-item {% if context in filters %}selected{% endif %} context-{{ context }}">
+                <a href="{% if context in filters %}/{% else %}/filter/@{{ context }}{% endif %}"><span class="context" data-type="context" data-value="@{{ context }}">@{{ context }}</span></a>
+            </li>
+        {% endfor %}
+    </ul>
+{% endif %}

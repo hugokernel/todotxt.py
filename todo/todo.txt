@@ -1,2 +1,8 @@
-Classer les context et project !!
-(D) Une interface de configuration dans l'app
+Classer les context et project !! +feature
+(D) Une interface de configuration dans l'app +feature
+ Afficher le nombre de context / project dans la liste à côté de chaque item +feature
+(C) Afficher dans un onglet le fichier done permettant de voir les todo finies si done actif sinon, pour voir les todo marquées finies +feature
+Pouvoir épingler les contexts / projects sélectionné afin qu'il reste +idea +feature
+Si je clique sur un context / project supplémentaire avec la touche Ctrl enfoncé, cela l'ajoute dans le filtre. +feature
+Version mobile / responsive +feature
+ Pouvoir spécifier pour chaque fichier todo l'action "when done" +feature

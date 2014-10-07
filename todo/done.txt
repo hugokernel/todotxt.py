@@ -16,3 +16,5 @@ Coucou due:2014-01-01 faire ceci !
 2014-10-06 (B) Pouvoir spécifier plusieurs fichier todo, si la variable de conf est un tuple, afficher un select sur le gui +todo
 2014-10-06 (F) Gestion des lignes à rallonge (ex: A compter du dépôt du colis en bureau de poste, ce numéro vous permettra de suivre à tout moment votre Colissimo A compter du dépôt du colis en bureau de poste, ce numéro vous permettra de suivre à tout moment votre Colissimo I)
 2014-10-06 (G) Permettre le stockage dans le même fichier des done préfixés avec 'x'
+2014-10-07 (B) Si j'ajoute un project/context, quand je vais dans le menu, le survol ne sélectionne pas la nouvelle ligne +bug
+2014-10-07 Lorsque l'on marque une todo done, la marquer comme supprimée, avec un lien Cancel +feature
