@@ -1,8 +1,8 @@
 {% if projects %}
     <ul id="projects" class="list-group">
-        {% for project in projects %}
+        {% for project, count in projects %}
             <li class="list-group-item {% if project in filters %}selected{% endif %} project-{{ project }}">
-                <a href="{% if project in filters %}/{% else %}/filter/+{{ project }}{% endif %}"><span class="project" data-type="project" data-value="+{{ project }}">+{{ project }}</span></a>
+                <a href="/{{ todo_selected }}{% if project in filters %}/{% else %}/filter/+{{ project }}{% endif %}"><span class="project" data-type="project" data-value="+{{ project }}">+{{ project }} <span class="badge pull-right">{{ count }}</span></span></a>
             </li>
         {% endfor %}
     </ul>

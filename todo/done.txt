@@ -18,3 +18,10 @@ Coucou due:2014-01-01 faire ceci !
 2014-10-06 (G) Permettre le stockage dans le même fichier des done préfixés avec 'x'
 2014-10-07 (B) Si j'ajoute un project/context, quand je vais dans le menu, le survol ne sélectionne pas la nouvelle ligne +bug
 2014-10-07 Lorsque l'on marque une todo done, la marquer comme supprimée, avec un lien Cancel +feature
+2014-10-08 (B) Pouvoir cliquer sur les liens sans que ça ouvre l'édition +bug ex: http://www.example.org/
+2014-10-09 Afficher le nombre de context / project dans la liste à côté de chaque item +feature
+2014-10-09 Pouvoir spécifier pour chaque fichier todo l'action "when done" +feature
+2014-10-09 Classer les context et project !! +feature
+2014-10-09 (A) Pouvoir afficher le contenu brut du fichier todo.txt +feature
+2014-10-09 La gestion des todo multiple n'est pas gérée dans filter +bug
+2014-10-09 Si je clique sur un context / project supplémentaire avec la touche Ctrl enfoncé, cela l'ajoute dans le filtre. +feature

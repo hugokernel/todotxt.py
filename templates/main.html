@@ -1,465 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+
+<head>
     <meta charset="utf-8">
     <meta name="description" content="">
     <meta name="keywords" content="">
     <meta name="author" content="hugokernel">
-    <title></title>
-
-<!-- Bootstrap core CSS -->
-<link href="/static/css/bootstrap.min.css" rel="stylesheet">
-
-<!-- Optional theme -->
-<link rel="stylesheet" href="/static/css/bootstrap-theme.min.css">
-<link rel="stylesheet" href="/static/css/bootstrap-editable.css">
-
-<script src="/static/js/jquery-1.11.1.min.js"></script>
-
-<!-- Latest compiled and minified JavaScript -->
-<script src="/static/js/bootstrap.min.js"></script>
-<script src="/static/js/bootstrap-editable.min.js"></script>
-<script src="/static/js/bootstrap3-typeahead.js"></script>
-
-<style>
-
-.container-fluid {
-    margin-top: 20px;
-}
-
-.context {
-    font-style: italic;
-    color: green;
-}
-
-.project {
-    font-weight: bold;
-    color: red;
-}
-
-.project:hover, .context:hover {
-
-}
-
-.list-group-item:hover {
-    background-color: #FFE;
-}
-
-.date {
-    color: #CCCC00;
-}
-
-.priority {
-    font-weight: bold;
-    color: violet;
-}
-
-.priority-a {
-    background-color: #FCC;
-}
-
-.priority-a.highlight {
-    background-color: #FCC;
-}
-
-.highlight {
-    background-color: #FFC !important;
-}
-
-.deleted {
-    background-color: #DDD !important;
-}
-
-.link-action {
-    float: right;
-    display: block;
-    margin-right: 10px;
-}
-
-.error {
-    margin: 2px;
-    padding: 5px;
-}
-
-.selected {
-    background-color: #FFC;
-}
-
-.todo input, .todoinput {
-    width: 100% !important;
-    border: 0;
-    margin: 0;
-    padding: 0;
-    background-color: #EEE;
-}
-
-#line-new {
-    background-color: #FFA;
-}
-
-#footer {
-    position: fixed;
-    bottom: 0px;
-    right: 10px;
-}
-
-.editable-click {
-    border-bottom: none !important;
-}
-
-.editable-input, .editable-container.editable-inline, .editableform .control-group {
-    width: 100% !important;
-}
-
-.link-undo, .link-undo span {
-    display: none;
-}
-
-li.deleted a, li.deleted .link-action span {
-    display: none;
-}
-
-</style>
-
-<script type="text/javascript">
-
-$(document).ready(function() {
-
-    $.fn.editable.defaults.mode = 'inline';
-    $.fn.editable.defaults.ajaxOptions = {type: "GET"};
-
-    var ws = new WebSocket("ws://localhost:8080/websocket");
-    ws.onopen = function() {
-        ws.send("Hello, world");
-    };
-
-    ws.onmessage = function (evt) {
-        if (evt.data == 'update') {
-            reload()
-        }
-    };
-
-    reload = function() {
-        refreshList();
-        refreshContexts();
-        refreshProjects();
-    };
-
-    refreshList = function() {
-        $.ajax({
-            url:    '/list/get',
-            success:    function(data) {
-                $('#todo-list').replaceWith(data);
-                live();
-                $('.link-action').hide();
-            }
-        });
-    };
-
-    refreshContexts = function() {
-        $.ajax({
-            url:    '/contexts/get',
-            success:    function(data) {
-                $('#contexts').replaceWith(data);
-                live();
-            }
-        });
-    };
-
-    refreshProjects = function() {
-        $.ajax({
-            url:    '/projects/get',
-            success:    function(data) {
-                $('#projects').replaceWith(data);
-                live();
-            }
-        });
-    };
-
-    function extractor(query) {
-        var result = /([^ ]+)$/.exec(query);
-        if(result && result[1])
-            return result[1].trim();
-        return '';
-    }
-
-    typeaheadoptions = {
-        source: function() {
-            data = []
-            $('#projects span.project, #contexts span.context').each(function(item) {
-                data.push($(this).data('value'));
-            })
-            return data;
-        },
-        updater: function(item) {
-            return this.$element.val().replace(/[^\ ]*$/,'')+item;
-        },
-        matcher: function (item) {
-          var tquery = extractor(this.query);
-          if(!tquery) return false;
-          return ~item.toLowerCase().indexOf(tquery.toLowerCase())
-        },
-        highlighter: function (item) {
-          var query = extractor(this.query).replace(/[\-\[\]{}()*+?.,\\\^$|#\s]/g, '\\$&')
-          return item.replace(new RegExp('(' + query + ')', 'ig'), function ($1, match) {
-            return '<strong>' + match + '</strong>'
-          })
-        }
-    }
-
-    $('.link-action').hide();
-
-    new_options = {
-        inputclass: 'todoinput',
-        clear: false,
-        showbuttons: false,
-        //type: 'text',
-        pk:     function() {
-            return 'pk';
-        },
-        url:    '/api/new',
-        params: function(params) {
-            return { data: params.value };
-        },
-        value: '',
-        source: [ 
-            { value: 'aa', text: 'AA' },
-            { value: 'bb', text: 'BB' },
-        ],
-        success: function(response, newValue) {
-            reload();
-        },
-    };
-        
-    edit_options = {
-        inputclass: 'todoinput',
-        clear: false,
-        showbuttons: false,
-        //type: 'text',
-        pk:     function() {
-            return 'pk';
-        },
-        //url:    '/api/new',
-        url:    function(params) {
-            var d = new $.Deferred;
-
-            line = $(this).data('line');
-            hash = $(this).data('hash');
-            $.ajax({
-                url:    '/api/edit/' + line + '/' + hash,// + '/' + encodeURIComponent(value),
-                data:   {
-                    data: params.data
-                },
-                success:    function(data) {
-                    d.resolve();
-                }
-            });
-
-            return d.promise();
-        },
-        submit: function(options) {
-            console.info(options);
-        },
-        params: function(params) {
-            return { data: params.value };
-        },
-        success: function(response, newValue) {
-            reload();
-        },
-    };
-
-    live = function() {
-        $('#todo-new').editable(new_options);
-        $('.todo:not(#todo-new)').editable(edit_options);
-
-        $('#todo-new, .todo:not(#todo-new)').on('shown', function(e, editable) {
-            $(editable.input.$input).typeahead(typeaheadoptions);
-        });
-
-        highlight();
-    };
-
-    $('#todo-content').on('mouseenter', '#todo-list li', function() {
-        $(this).children('.link-action').show();
-    });
-
-    $('#todo-content').on('mouseleave', '#todo-list li', function() {
-        $(this).children('.link-action').hide();
-    });
-
-    highlight = function() {
-        $('#todo-content, #projects, #contexts').on('mouseenter', '.context, .project', function() {
-            $('.' + $(this).data('type') + '-' + $(this).data('value').substr(1)).addClass('highlight');
-        });
-        
-        $('#todo-content, #projects, #contexts').on('mouseleave', '.context, .project', function() {
-            $('.' + $(this).data('type') + '-' + $(this).data('value').substr(1)).removeClass('highlight');
-        });
-    };
-
-    highlight();
-
-    getRoot = function() {
-        return '/' + ($('#todo-selector').find(":selected").val());
-    };
-
-    $('#todo-content').on('click', '.link-delete', function(e) {
-        if (confirm('Are you sure ?')) {
-            line = $('#todo-' + $(this).data('line')).data('line');
-            hash = $('#todo-' + $(this).data('line')).data('hash');
-
-            e.preventDefault();
-            e.stopPropagation();
-
-            $.ajax({
-                url:    '/delete/' + line + '/' + hash,
-                success:    function(data) {
-                    reload()
-                }
-            });
-        }
-
-        return false;
-    });
-
-    /*
-    $('#todo-content').on('click', '.link-done', function(e) {
-        if (confirm('Are you sure ?')) {
-            line = $('#todo-' + $(this).data('line')).data('line');
-            hash = $('#todo-' + $(this).data('line')).data('hash');
-
-            e.preventDefault();
-            e.stopPropagation();
-
-            $.ajax({
-                url:    '/mark_as_done/' + line + '/' + hash,
-                success:    function(data) {
-                    reload()
-                }
-            });
-        }
-
-        return false;
-    });
-    */
-
-    var undos = []
-
-    $('#todo-content').on('click', '.link-done', function(e) {
-        $(this).hide();
-        $(this).parent('li').addClass('deleted');
-        $(this).parent('li').find('.link-undo, .link-undo span').show();
-
-        var line = $('#todo-' + $(this).data('line')).data('line');
-        var hash = $('#todo-' + $(this).data('line')).data('hash');
-
-        undos[line] = setTimeout(function() {
-
-            $('#line-' + line).hide('slow', function() {
-
-                e.preventDefault();
-                e.stopPropagation();
-
-                $.ajax({
-                    url:    '/mark_as_done/' + line + '/' + hash,
-                    success:    function(data) {
-                        reload()
-                    }
-                });
-
-            });
-        }, 3000);
-
-        return false;
-    });
-
-    $('#todo-content').on('click', '.link-undo', function(e) {
-        var line = $('#todo-' + $(this).data('line')).data('line');
-        clearTimeout(undos[line]);
-
-        //$(this).hide();
-        $(this).parent('li').removeClass('deleted');
-        $(this).parent('li').find('.link-undo, .link-undo span').hide();
-    });
-
-    $('#todo-selector').change(function() {
-        window.location = '/' + $(this).val() + '/';
-    });
-
-
-    live();
-});
-
-</script>
-
+    <title>Todo</title>
+
+    <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="/static/css/bootstrap-theme.min.css">
+    <link rel="stylesheet" href="/static/css/bootstrap-editable.css">
+    <link rel="stylesheet" href="/static/css/todo.css">
+
+    <script src="/static/js/jquery-1.11.1.min.js"></script>
+    <script src="/static/js/bootstrap.min.js"></script>
+    <script src="/static/js/bootstrap-editable.min.js"></script>
+    <script src="/static/js/bootstrap3-typeahead.js"></script>
+    <script src="/static/js/todo.js"></script>
 </head>
 
 <body>
 
-<!--
-<input class="typeahead" type="text" data-provide="typeahead">
+    <div class="container-fluid">
 
-<script>
-$(document).ready(function() {
-    $('.typeahead').typeahead({
-        source: [ 'aaaa', 'bbbb', 'cccc' ]   
-    })
-});
-</script>
--->
+        <div class="row">
+            <div class="col-xs-2">
+                {% include 'contexts.html' %}
+                {% include 'projects.html' %}
 
-<!--
-<div id="the-basics">
-<input class="typeahead" type="text" placeholder="States of USA">
-</div>
--->
+                {% if error_message %}
+                    <p class="error bg-danger">
+                        {{ error_message }}
+                    </p>
+                {% endif %}
 
-<div class="container-fluid">
+                <div class="dropdown">
+                    <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown">
+                        Selection: {{ todo_name }}
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
+                        {% for dir, name in todo_files %}
+                            <li role="presentation" class="{% if todo_selected == loop.index0 %}disabled{% endif %}">
+                                <a role="menuitem" tabindex="-1" href="/{{ loop.index0 }}/">{{ name }}</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
 
-    <div class="row">
-        <div class="col-xs-2">
-            {% include 'contexts.html' %}
-            {% include 'projects.html' %}
-
-            {% if error_message %}
-                <p class="error bg-danger">
-                    {{ error_message }}
-                </p>
-            {% endif %}
-
-            <div class="dropdown">
-                <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown">
-                    Selection: {{ todo_name }}
-                    <span class="caret"></span>
-                </button>
-                <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
+                {#
+                <select id="todo-selector">
                     {% for name, dir in todo_files %}
-                        <li role="presentation" class="{% if todo_selected == loop.index0 %}disabled{% endif %}">
-                            <a role="menuitem" tabindex="-1" href="/{{ loop.index0 }}/">{{ name }}</a>
-                        </li>
+                        <option value="{{ loop.index0 }}" {% if todo_selected == loop.index0 %}selected="selected"{% endif %}>{{ name }}</option>
                     {% endfor %}
-                </ul>
+                </select>
+                #}
             </div>
+            <div class="col-xs-10" id="todo-content">
+                {% include 'list.html' %}
+                <a href="/download/current" id="current-file_link">{{ todo_filename }}</a>
+            </div>
+        </div>
 
-            {#
-            <select id="todo-selector">
-                {% for name, dir in todo_files %}
-                    <option value="{{ loop.index0 }}" {% if todo_selected == loop.index0 %}selected="selected"{% endif %}>{{ name }}</option>
-                {% endfor %}
-            </select>
-            #}
-        </div>
-        <div class="col-xs-10" id="todo-content">
-            {% include 'list.html' %}
-        </div>
     </div>
 
-</div>
-
-<p id="footer">
-    <a href="https://github.com/hugokernel/todotxt.py">GitHub / todotxt.py</a> |
-    <a href="https://github.com/ginatrapani/todo.txt-cli/wiki/The-Todo.txt-Format">The Todo.txt format</a>
-</p>
+    <p id="footer">
+        <a href="https://github.com/hugokernel/todotxt.py">GitHub / todotxt.py</a> |
+        <a href="https://github.com/ginatrapani/todo.txt-cli/wiki/The-Todo.txt-Format">The Todo.txt format</a>
+    </p>
 
 </body>
 
