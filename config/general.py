@@ -10,7 +10,7 @@ TODO_FILES = (
 '''
 TODO_FILES = (
     ( './todo/todo.txt', 'Todo app', { 'action_when_done': 1 } ),
-    ( '~/todo.txt',      'Mine'),
+    ( '~/Documents/Dropbox/Todo/todo.txt',      'Mine'),
     ( './todo/pouf.txt', 'Test' ),
 )
 
