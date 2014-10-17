@@ -66,7 +66,7 @@ def stylesheets(path):
     return static_file(path, root='static/css')
 
 @route('/static/fonts/<path:path>')
-def stylesheets(path):
+def fonts(path):
     return static_file(path, root='static/fonts')
 
 @route('/static/img/<path:path>')
@@ -74,7 +74,10 @@ def stylesheets(path):
     return static_file(path, root='static/img')
 
 @route('/download/current')
-def stylesheets():
+@route('/<todo>/download/current')
+@Helper.loader
+def download(todo=None):
+    print t.todo_file
     return static_file(t.todo_file, root='')
 
 @route('/', name='home')
@@ -88,7 +91,18 @@ def home(todo=None):
     for item in Helper.list():
         todo_list.append((item[0], item[1] if len(item) > 1 else item[0]))
 
-    return { 'todos': todos, 'contexts': contexts, 'projects': projects, 'todo_files': todo_list, 'todo_filename': os.path.basename(t.todo_file), 'todo_selected': todo_selected, 'todo_name': todo_name }
+    return {
+        'todos':            todos,
+        'contexts':         contexts, 
+        'projects':         projects, 
+        'todo_files':       todo_list, 
+        'todo_filename':    os.path.basename(t.todo_file), 
+        'todo_selected':    todo_selected, 
+        'todo_name':        todo_name,
+        'source':           ''.join(t.read()),
+        'done':             ''.join(t.read(t.done_file)),
+        'done_file':        t.action_when_done in (1, 2)
+    }
 
 @route('/list/get', name='listget')
 @route('/<todo>/list/get')
@@ -104,7 +118,7 @@ def list_get(todo=None):
 def contexts_get(todo=None):
     global t
     t.load()
-    return { 'contexts': t.contexts }
+    return { 'contexts': t.contexts }#, 'contexts_filtered': t.contexts_filtered }
 
 @route('/projects/get', name='projectsget')
 @route('/<todo>/projects/get')
@@ -113,7 +127,7 @@ def contexts_get(todo=None):
 def projects_get(todo=None):
     global t
     t.load()
-    return { 'projects': t.projects }
+    return { 'projects': t.projects }#, 'projects_filtered': t.projects_filtered }
 
 @route('/filter/<filters>', name='filter')
 @route('/<todo>/filter/<filters>')
@@ -131,7 +145,19 @@ def filter(filters, todo=None):
     for item in Helper.list():
         todo_list.append((item[0], item[1] if len(item) > 1 else item[0]))
 
-    return { 'todos': todos, 'contexts': t.contexts, 'projects': t.projects, 'filters': filters, 'todo_files': todo_list, 'todo_filename': os.path.basename(t.todo_file), 'todo_selected': todo_selected, 'todo_name': todo_name }
+    return {
+        'todos':                todos,
+        'contexts':             t.contexts,
+        'projects':             t.projects,
+        'filters':              filters,
+        'todo_files':           todo_list,
+        'todo_filename':        os.path.basename(t.todo_file),
+        'todo_selected':        todo_selected,
+        'todo_name':            todo_name,
+        'projects_filtered':    t.projects_filtered,
+        'contexts_filtered':    t.contexts_filtered,
+        'source':               ''.join(t.read())
+    }
 
 def is_ajax():
     return request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -187,6 +213,14 @@ def new(todo=None):
     todo = t.new(request.query.get('data'))
     return { 'todo': todo }
 
+@route('/api/raw/write', name='rawwrite', method='POST')
+@route('/<todo>/api/raw/write')
+@Helper.loader
+def rawwrite(todo=None):
+    data = request.forms.get('data').strip()
+    t.write(data)
+    return { 'data': data }
+
 if False:
     from bottle.ext.websocket import GeventWebSocketServer
     from bottle.ext.websocket import websocket
@@ -208,7 +242,6 @@ if False:
     observer = Observer()
     observer.schedule(toto, '/var/www/todo/src/todo/', recursive=False)
     observer.start()
-
 
     wsrequest = None
     @get('/websocket', apply=[websocket])

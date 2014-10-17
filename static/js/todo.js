@@ -168,12 +168,11 @@ $(document).ready(function() {
         $(this).children('.link-action').hide();
     });
 
-    $('#projects a').click(function(e) {
+    $('#contexts, #projects').on('click', 'a', function(e) {
         filterUrl = '/filter/';
         filter = $(this).find('span').data('value');
-
         if (e.ctrlKey) {
-            isFilterUrl = window.location.pathname.substr(0, filterUrl.length) == filterUrl;
+            isFilterUrl = window.location.pathname.indexOf(filterUrl) > 0;
             if (isFilterUrl) {
                 // Remove filter
                 pos = window.location.pathname.indexOf(filter)
@@ -206,46 +205,6 @@ $(document).ready(function() {
         return '/' + ($('#todo-selector').find(":selected").val());
     };
 
-    $('#todo-content').on('click', '.link-delete', function(e) {
-        if (confirm('Are you sure ?')) {
-            line = $('#todo-' + $(this).data('line')).data('line');
-            hash = $('#todo-' + $(this).data('line')).data('hash');
-
-            e.preventDefault();
-            e.stopPropagation();
-
-            $.ajax({
-                url:    '/delete/' + line + '/' + hash,
-                success:    function(data) {
-                    reload()
-                }
-            });
-        }
-
-        return false;
-    });
-
-    /*
-    $('#todo-content').on('click', '.link-done', function(e) {
-        if (confirm('Are you sure ?')) {
-            line = $('#todo-' + $(this).data('line')).data('line');
-            hash = $('#todo-' + $(this).data('line')).data('hash');
-
-            e.preventDefault();
-            e.stopPropagation();
-
-            $.ajax({
-                url:    '/mark_as_done/' + line + '/' + hash,
-                success:    function(data) {
-                    reload()
-                }
-            });
-        }
-
-        return false;
-    });
-    */
-
     var undos = []
 
     $('#todo-content').on('click', '.link-done', function(e) {
@@ -259,7 +218,6 @@ $(document).ready(function() {
         undos[line] = setTimeout(function() {
 
             $('#line-' + line).hide('slow', function() {
-
                 e.preventDefault();
                 e.stopPropagation();
 
@@ -270,6 +228,32 @@ $(document).ready(function() {
                     }
                 });
 
+            });
+        }, 3000);
+
+        return false;
+    });
+
+    $('#todo-content').on('click', '.link-delete', function(e) {
+        $(this).hide();
+        $(this).parent('li').addClass('deleted');
+        $(this).parent('li').find('.link-undo, .link-undo span').show();
+
+        var line = $('#todo-' + $(this).data('line')).data('line');
+        var hash = $('#todo-' + $(this).data('line')).data('hash');
+
+        undos[line] = setTimeout(function() {
+
+            $('#line-' + line).hide('slow', function() {
+                e.preventDefault();
+                e.stopPropagation();
+
+                $.ajax({
+                    url:    '/delete/' + line + '/' + hash,
+                    success:    function(data) {
+                        reload()
+                    }
+                });
             });
         }, 3000);
 
@@ -289,6 +273,37 @@ $(document).ready(function() {
         window.location = '/' + $(this).val() + '/';
     });
 
+    $('body').on('click', '#current-file_link', function() {
+        var url = $(this).attr('href');
+        $('.jumbotron').toggle(1000);
+        $.ajax({
+            url:    url,
+            success:    function(data) {
+                $('#todo-source textarea').val(data);
+            }
+        });
+        return false;
+    });
+
+    $('#todo-source').submit(function() {
+        $.ajax({
+            type: 'POST',
+            url:    '/api/raw/write',
+            data:   {
+                data: $('#edit-files textarea').val(),
+            },
+            success:    function(data) {
+                $('#todo-source textarea').val(data.data);
+                $('.jumbotron').hide(300);
+            }
+        });
+        return false;
+    });
+
+    $('#edit-file').on('click', 'input[type=reset]', function() {
+        $('.jumbotron').hide(1000);
+        return false;
+    });
 
     live();
 });

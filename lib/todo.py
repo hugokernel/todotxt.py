@@ -69,6 +69,11 @@ class Todo:
             content = f.readlines()
         return content
 
+    def write(self, data, file=None):
+        with AtomicFile(self.getFile(file if file else self.todo_file), "w") as f:
+            f.write(data)
+        return True
+
     @staticmethod
     def get_hash(text):
         return hashlib.md5(text.encode('utf-8')).hexdigest()
@@ -120,6 +125,9 @@ class Todo:
 
         content = self.read()
 
+        self.contexts = {}
+        self.projects = {}
+
         count = 0
         _contexts = _projects = []
         for text in content:
@@ -130,6 +138,12 @@ class Todo:
                 continue
 
             line = self.generate(text, count)
+
+            # Get all contexts and all projects
+            for context in line.contexts:
+                self.contexts[context] = 1 if context not in self.contexts else self.contexts[context] + 1
+            for project in line.projects:
+                self.projects[project] = 1 if project not in self.projects else self.projects[project] + 1
 
             if contexts:
                 found = True
@@ -175,20 +189,15 @@ class Todo:
 
         out = sorted(out, compare)
 
-        self.contexts = {}
-        self.projects = {}
+        self.contexts_filtered = []
+        self.projects_filtered = []
         for line in out:
             for context in line.contexts:
-                if context in self.contexts:
-                    self.contexts[context] += 1
-                else:
-                    self.contexts[context] = 1
-
+                if context not in self.contexts_filtered:
+                    self.contexts_filtered.append(context)
             for project in line.projects:
-                if project in self.projects:
-                    self.projects[project] += 1
-                else:
-                    self.projects[project] = 1
+                if project not in self.projects_filtered:
+                    self.projects_filtered.append(project)
 
         if self.context_order == 0:
             self.contexts = sorted(self.contexts.items(), key=lambda x: x[0])

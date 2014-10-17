@@ -2,5 +2,3 @@
 (C) Afficher dans un onglet le fichier done permettant de voir les todo finies si done actif sinon, pour voir les todo marquées finies +feature
 Pouvoir épingler les contexts / projects sélectionné afin qu'il reste +idea +feature
 Version mobile / responsive +feature
-Lorsque je choisi un ou des filtres, il disparaissent de la liste de project / context, les passer en grisé ? +bug
- Undo sur le delete +feature

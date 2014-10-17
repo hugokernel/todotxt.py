@@ -23,6 +23,27 @@
 
 <body>
 
+    <div class="jumbotron" id="edit-files">
+        <h2>{{ todo_name }} (todo.txt)</h2>
+        <form id="todo-source">
+            <textarea rows="8" cols="40">{{ source }}</textarea>
+            <input type="submit" value="Modifier" />
+        </form>
+
+        {% if done_file %}
+            <hr />
+
+            <h2>done.txt</h2>
+            <form id="done-source">
+                <textarea rows="8" cols="40">{{ done }}</textarea>
+                <input type="submit" value="Modifier" />
+            </form>
+        {% endif %}
+
+        <hr />
+        <input type="reset" value="Annuler" />
+    </div>
+
     <div class="container-fluid">
 
         <div class="row">
@@ -60,7 +81,7 @@
             </div>
             <div class="col-xs-10" id="todo-content">
                 {% include 'list.html' %}
-                <a href="/download/current" id="current-file_link">{{ todo_filename }}</a>
+                <a href="/{{ todo_selected }}/download/current" id="current-file_link">{{ todo_filename }}</a>
             </div>
         </div>
 

@@ -13,14 +13,6 @@
     color: red;
 }
 
-.project:hover, .context:hover {
-
-}
-
-.list-group-item:hover {
-    background-color: #FFE;
-}
-
 .date {
     color: #CCCC00;
 }
@@ -55,6 +47,17 @@
 .error {
     margin: 2px;
     padding: 5px;
+}
+
+.project:hover, .context:hover {
+}
+
+.list-group-item:hover {
+    background-color: #FFE;
+}
+
+.possible {
+    background-color: #FFE;
 }
 
 .selected {
@@ -105,5 +108,15 @@ li.deleted a, li.deleted .link-action span {
 
 #current-file_link {
     float: right;
+}
+
+#edit-files {
+    display: none;
+}
+
+#edit-files textarea {
+    border: 0 none;
+    padding: 10px;
+    width: 100%;
 }
 
