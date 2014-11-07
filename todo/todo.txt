@@ -1,4 +1,4 @@
-(D) Une interface de configuration dans l'app +feature
-(C) Afficher dans un onglet le fichier done permettant de voir les todo finies si done actif sinon, pour voir les todo marquées finies +feature
-Pouvoir épingler les contexts / projects sélectionné afin qu'il reste +idea +feature
-Version mobile / responsive +feature
+(D) Lors de l'écriture, ajouter des liens cliquables pour ajouter des project, context, date, etc...
+Classer les context et project ! +tips +astuce
+(A) Push pour recevoir les modifications du fichier en live +todo +feature
+(D) Gérer les due +todo due:2014-10-01

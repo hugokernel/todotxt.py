@@ -13,4 +13,4 @@ Coucou due:2014-10-02 faire ceci !!
 (A) Push pour recevoir les modifications du fichier en live +todo +feature
 (D) Gérer les due +todo due:2014-10-01
 Mettre un lien en bas pointant vers la doc du format https://github.com/ginatrapani/todo.txt-cli/wiki/The-Todo.txt-Format
-(D) Remplacer les dates par "demain", "après demain", etc... +todo +feature
+(D) Remplacer les dates par "demain", "après demain", etc... +todo +feature +test

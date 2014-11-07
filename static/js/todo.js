@@ -4,15 +4,22 @@ $(document).ready(function() {
     $.fn.editable.defaults.mode = 'inline';
     $.fn.editable.defaults.ajaxOptions = {type: "GET"};
 
-    var ws = new WebSocket("ws://localhost:8080/websocket");
-    ws.onopen = function() {
-        ws.send("Hello, world");
-    };
+    //var ws = new WebSocket('ws://' + HOST + ':' + PORT + BASE_PATH + 'websocket');
+    ws = 0;
+    if (ws) {
+        ws.onopen = function() {
+            ws.send("Hello, world");
+        };
 
-    ws.onmessage = function (evt) {
-        if (evt.data == 'update') {
-            reload()
-        }
+        ws.onmessage = function (evt) {
+            if (evt.data == 'update') {
+                reload()
+            }
+        };
+    }
+
+    getUrl = function(url) {
+        return BASE_PATH + url;
     };
 
     reload = function() {
@@ -23,7 +30,7 @@ $(document).ready(function() {
 
     refreshList = function() {
         $.ajax({
-            url:    '/list/get',
+            url:    getUrl('list/get'),
             success:    function(data) {
                 $('#todo-list').replaceWith(data);
                 live();
@@ -32,9 +39,19 @@ $(document).ready(function() {
         });
     };
 
+    refreshSource = function() {
+        $.ajax({
+            url:    getUrl('api/raw/read'),
+            success:    function(data) {
+                $('#todo-source textarea').val(data.data);
+                $('#done-source textarea').val(data.data);
+            }
+        });
+    };
+
     refreshContexts = function() {
         $.ajax({
-            url:    '/contexts/get',
+            url:    getUrl('contexts/get'),
             success:    function(data) {
                 $('#contexts').replaceWith(data);
                 live();
@@ -44,7 +61,7 @@ $(document).ready(function() {
 
     refreshProjects = function() {
         $.ajax({
-            url:    '/projects/get',
+            url:    getUrl('projects/get'),
             success:    function(data) {
                 $('#projects').replaceWith(data);
                 live();
@@ -93,7 +110,7 @@ $(document).ready(function() {
         pk:     function() {
             return 'pk';
         },
-        url:    '/api/new',
+        url:    getUrl('api/new'),
         params: function(params) {
             return { data: params.value };
         },
@@ -122,7 +139,7 @@ $(document).ready(function() {
             line = $(this).data('line');
             hash = $(this).data('hash');
             $.ajax({
-                url:    '/api/edit/' + line + '/' + hash,// + '/' + encodeURIComponent(value),
+                url:    getUrl('api/edit/' + line + '/' + hash),// + '/' + encodeURIComponent(value),
                 data:   {
                     data: params.data
                 },
@@ -169,7 +186,7 @@ $(document).ready(function() {
     });
 
     $('#contexts, #projects').on('click', 'a', function(e) {
-        filterUrl = '/filter/';
+        filterUrl = 'filter/';
         filter = $(this).find('span').data('value');
         if (e.ctrlKey) {
             isFilterUrl = window.location.pathname.indexOf(filterUrl) > 0;
@@ -222,7 +239,7 @@ $(document).ready(function() {
                 e.stopPropagation();
 
                 $.ajax({
-                    url:    '/mark_as_done/' + line + '/' + hash,
+                    url:    getUrl('mark_as_done/' + line + '/' + hash),
                     success:    function(data) {
                         reload()
                     }
@@ -249,7 +266,7 @@ $(document).ready(function() {
                 e.stopPropagation();
 
                 $.ajax({
-                    url:    '/delete/' + line + '/' + hash,
+                    url:    getUrl('delete/' + line + '/' + hash),
                     success:    function(data) {
                         reload()
                     }
@@ -285,22 +302,41 @@ $(document).ready(function() {
         return false;
     });
 
-    $('#todo-source').submit(function() {
+    $('#todo-source').on('submit', function() {
         $.ajax({
             type: 'POST',
-            url:    '/api/raw/write',
+            url:    getUrl('api/raw/write'),
             data:   {
-                data: $('#edit-files textarea').val(),
+                data: $('#todo-source textarea').val(),
             },
             success:    function(data) {
-                $('#todo-source textarea').val(data.data);
+                //$('#todo-source textarea').val(data.data);
                 $('.jumbotron').hide(300);
+
+                reload();
             }
         });
         return false;
     });
 
-    $('#edit-file').on('click', 'input[type=reset]', function() {
+    $('#done-source').on('submit', function() {
+        $.ajax({
+            type: 'POST',
+            url:    getUrl('api/raw/write/done'),
+            data:   {
+                data: $('#done-source textarea').val(),
+            },
+            success:    function(data) {
+                //$('#done-source textarea').val(data.data);
+                $('.jumbotron').hide(300);
+
+                reload();
+            }
+        });
+        return false;
+    });
+
+    $('#edit-files').on('click', 'input[type=reset]', function() {
         $('.jumbotron').hide(1000);
         return false;
     });

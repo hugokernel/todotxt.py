@@ -2,18 +2,16 @@
 import os
 from bottle import get, route, request, run, template, static_file, jinja2_view, jinja2_template
 
-from config.general import TODO_FILE, TODO_FILES, HOST, PORT
+from config.general import TODO_FILE, HOST, PORT, BASE_PATH
 
 from lib.todo import Todo, TodoError, TodoHashError
 
 t = Todo()
 
-t.todo_file = TODO_FILES[0][0]
-#print t.load()
-#for l in t.load():
-#    print l.text
+if type(TODO_FILE) == str:
+    TODO_FILE = ( ( TODO_FILE, ), )
 
-#exit()
+t.todo_file = TODO_FILE[0][0]
 
 todo_selected = 0
 todo_name = ''
@@ -29,10 +27,10 @@ class Helper:
         def wrapper(*args, **kwargs):
             global todo_selected, todo_name
             if 'todo' in kwargs:
-                item = TODO_FILES[int(kwargs['todo'])]
+                item = TODO_FILE[int(kwargs['todo'])]
+                name = ''
                 if type(item) == str:
                     t.todo_file = item
-                    name = ''
                 elif type(item) == tuple:
                     if len(item) == 2:
                         t.todo_file, name = item
@@ -40,8 +38,11 @@ class Helper:
                         t.todo_file, name, configs = item
                         for attr, value in configs.iteritems():
                             setattr(t, attr, value)
+
+                    if t.action_when_done in (1, 2):
+                        t.done_file = os.path.join(os.path.dirname(t.todo_file), 'done.txt')
                 else:
-                    raise Exception('TODO_FILES error !')
+                    raise Exception('TODO_FILE error !')
                 todo_selected = int(kwargs['todo'])
                 todo_name = name
             return func(**kwargs)
@@ -50,38 +51,39 @@ class Helper:
     @staticmethod
     def list():
         out = list()
-        for item in TODO_FILES:
+        for item in TODO_FILE:
             if type(item) == tuple:
                 out.append(item)
             else:
                 out.append((item, item))
         return out
 
-@route('/static/js/<path:path>')
+@route(BASE_PATH + 'static/js/<path:path>')
 def javascripts(path):
     return static_file(path, root='static/js')
 
-@route('/static/css/<path:path>')
+@route(BASE_PATH + 'static/css/<path:path>')
 def stylesheets(path):
     return static_file(path, root='static/css')
 
-@route('/static/fonts/<path:path>')
+@route(BASE_PATH + 'static/fonts/<path:path>')
 def fonts(path):
     return static_file(path, root='static/fonts')
 
-@route('/static/img/<path:path>')
+@route(BASE_PATH + 'static/img/<path:path>')
 def stylesheets(path):
     return static_file(path, root='static/img')
 
-@route('/download/current')
-@route('/<todo>/download/current')
+@route(BASE_PATH + 'download/current')
+@route(BASE_PATH + '<todo>/download/current')
 @Helper.loader
 def download(todo=None):
-    print t.todo_file
     return static_file(t.todo_file, root='')
 
-@route('/', name='home')
-@route('/<todo>/')
+@route(BASE_PATH + 'filter/')
+@route(BASE_PATH + '<todo>/filter/')
+@route(BASE_PATH + '', name='home')
+@route(BASE_PATH + '<todo>/')
 @jinja2_view('main.html', template_lookup=['templates'], getRoot=getRoot)
 @Helper.loader
 def home(todo=None):
@@ -92,6 +94,9 @@ def home(todo=None):
         todo_list.append((item[0], item[1] if len(item) > 1 else item[0]))
 
     return {
+        'HOST':             HOST,
+        'PORT':             PORT,
+        'BASE_PATH':         BASE_PATH,
         'todos':            todos,
         'contexts':         contexts, 
         'projects':         projects, 
@@ -104,33 +109,33 @@ def home(todo=None):
         'done_file':        t.action_when_done in (1, 2)
     }
 
-@route('/list/get', name='listget')
-@route('/<todo>/list/get')
+@route(BASE_PATH + 'list/get', name='listget')
+@route(BASE_PATH + '<todo>/list/get')
 @jinja2_view('list.html', template_lookup=['templates'], getRoot=getRoot)
 @Helper.loader
 def list_get(todo=None):
     return dict(zip(['todos', 'contexts', 'projects'], t.get_data()))
 
-@route('/contexts/get', name='contextsget')
-@route('/<todo>/contexts/get')
+@route(BASE_PATH + 'contexts/get', name='contextsget')
+@route(BASE_PATH + '<todo>/contexts/get')
 @jinja2_view('contexts.html', template_lookup=['templates'])
 @Helper.loader
 def contexts_get(todo=None):
     global t
     t.load()
-    return { 'contexts': t.contexts }#, 'contexts_filtered': t.contexts_filtered }
+    return { 'contexts': t.contexts, 'BASE_PATH': BASE_PATH }
 
-@route('/projects/get', name='projectsget')
-@route('/<todo>/projects/get')
+@route(BASE_PATH + 'projects/get', name='projectsget')
+@route(BASE_PATH + '<todo>/projects/get')
 @jinja2_view('projects.html', template_lookup=['templates'])
 @Helper.loader
 def projects_get(todo=None):
     global t
     t.load()
-    return { 'projects': t.projects }#, 'projects_filtered': t.projects_filtered }
+    return { 'projects': t.projects, 'BASE_PATH': BASE_PATH }
 
-@route('/filter/<filters>', name='filter')
-@route('/<todo>/filter/<filters>')
+@route(BASE_PATH + 'filter/<filters>', name='filter')
+@route(BASE_PATH + '<todo>/filter/<filters>')
 @jinja2_view('main.html', template_lookup=['templates'])
 @Helper.loader
 def filter(filters, todo=None):
@@ -146,6 +151,7 @@ def filter(filters, todo=None):
         todo_list.append((item[0], item[1] if len(item) > 1 else item[0]))
 
     return {
+        'BASE_PATH':             BASE_PATH,
         'todos':                todos,
         'contexts':             t.contexts,
         'projects':             t.projects,
@@ -162,8 +168,8 @@ def filter(filters, todo=None):
 def is_ajax():
     return request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
-@route('/api/edit/<line:int>/<hash>', name='edit')
-@route('/<todo>/api/edit/<line:int>/<hash>')
+@route(BASE_PATH + 'api/edit/<line:int>/<hash>', name='edit')
+@route(BASE_PATH + '<todo>/api/edit/<line:int>/<hash>')
 @jinja2_view('line.html', template_lookup=['templates'])
 @Helper.loader
 def edit(line, hash, todo=None):
@@ -174,8 +180,8 @@ def edit(line, hash, todo=None):
         error_message = 'Line not found !'
     return { 'todo': todo, 'error_message': error_message }
 
-@route('/mark_as_done/<line:int>/<hash>', name='mark_as_done')
-@route('/<todo>/mark_as_done/<line:int>/<hash>')
+@route(BASE_PATH + 'mark_as_done/<line:int>/<hash>', name='mark_as_done')
+@route(BASE_PATH + '<todo>/mark_as_done/<line:int>/<hash>')
 @Helper.loader
 def mark_as_done(line, hash, todo=None):
     error_message = ''
@@ -189,8 +195,8 @@ def mark_as_done(line, hash, todo=None):
     else:
         return home()
 
-@route('/delete/<line:int>/<hash>', name='delete')
-@route('/<todo>/delete/<line:int>/<hash>')
+@route(BASE_PATH + 'delete/<line:int>/<hash>', name='delete')
+@route(BASE_PATH + '<todo>/delete/<line:int>/<hash>')
 @Helper.loader
 def delete(line, hash, todo=None):
 
@@ -205,21 +211,38 @@ def delete(line, hash, todo=None):
     else:
         return home()
 
-@route('/api/new', name='new')#, method=['GET', 'POST'])
-@route('/<todo>/api/new')
+@route(BASE_PATH + 'api/new', name='new')#, method=['GET', 'POST'])
+@route(BASE_PATH + '<todo>/api/new')
 @jinja2_view('line.html', template_lookup=['templates'])
 @Helper.loader
 def new(todo=None):
     todo = t.new(request.query.get('data'))
     return { 'todo': todo }
 
-@route('/api/raw/write', name='rawwrite', method='POST')
-@route('/<todo>/api/raw/write')
+@route(BASE_PATH + 'api/raw/write', name='rawwrite', method='POST')
+@route(BASE_PATH + '<todo>/api/raw/write')
 @Helper.loader
 def rawwrite(todo=None):
     data = request.forms.get('data').strip()
     t.write(data)
     return { 'data': data }
+
+@route(BASE_PATH + 'api/raw/write/done', name='rawwrite', method='POST')
+@route(BASE_PATH + '<todo>/api/raw/write/done')
+@Helper.loader
+def rawwritedone(todo=None):
+    if t.action_when_done in (1, 2):
+        data = request.forms.get('data').strip()
+        t.write(data, t.done_file)
+    return { 'data': data }
+
+@route(BASE_PATH + '<todo>/api/raw/read')
+@Helper.loader
+def rawread(todo=None):
+    data = { 'todo': t.read() }
+    if t.action_when_done in (1, 2):
+        data['done'] = t.read(t.done_file)
+    return data
 
 if False:
     from bottle.ext.websocket import GeventWebSocketServer
@@ -260,7 +283,7 @@ else:
     run(host=HOST, port=PORT)
 
 '''
-@route('/websocket')
+@route(BASE_PATH + 'websocket')
 def handle_websocket():
     wsock = request.environ.get('wsgi.websocket')
     if not wsock:

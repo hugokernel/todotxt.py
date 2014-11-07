@@ -26,6 +26,7 @@ Coucou due:2014-01-01 faire ceci !
 2014-10-09 La gestion des todo multiple n'est pas gérée dans filter +bug
 2014-10-09 Si je clique sur un context / project supplémentaire avec la touche Ctrl enfoncé, cela l'ajoute dans le filtre. +feature
 2014-10-13 Undo sur le delete +feature
-2014-10-13 DDD
-2014-10-13 dsdshdshsd
 2014-10-13 Lorsque je choisi un ou des filtres, il disparaissent de la liste de project / context, les passer en grisé ? +bug
+2014-10-30 (A) Faire le ménage dans la configuration avec les TODO_FILE et TODO_FILES
+2014-10-30 (B) Si on a qu'un seul fichier dans TODO_FILES, ne pas afficher de select
+2014-10-30 (B) Pouvoir spécifier plusieurs fichier todo, si la variable de conf est un tuple, afficher un select sur le gui +todo +idea

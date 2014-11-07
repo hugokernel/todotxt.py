@@ -8,17 +8,26 @@
     <meta name="author" content="hugokernel">
     <title>Todo</title>
 
-    <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="shortcut icon" href="{{ BASE_PATH }}static/img/favicon.png">
 
-    <link rel="stylesheet" href="/static/css/bootstrap-theme.min.css">
-    <link rel="stylesheet" href="/static/css/bootstrap-editable.css">
-    <link rel="stylesheet" href="/static/css/todo.css">
+    <link href="{{ BASE_PATH }}static/css/bootstrap.min.css" rel="stylesheet">
 
-    <script src="/static/js/jquery-1.11.1.min.js"></script>
-    <script src="/static/js/bootstrap.min.js"></script>
-    <script src="/static/js/bootstrap-editable.min.js"></script>
-    <script src="/static/js/bootstrap3-typeahead.js"></script>
-    <script src="/static/js/todo.js"></script>
+    <link rel="stylesheet" href="{{ BASE_PATH }}static/css/bootstrap-theme.min.css">
+    <link rel="stylesheet" href="{{ BASE_PATH }}static/css/bootstrap-editable.css">
+    <link rel="stylesheet" href="{{ BASE_PATH }}static/css/todo.css">
+
+    <script src="{{ BASE_PATH }}static/js/jquery-1.11.1.min.js"></script>
+    <script src="{{ BASE_PATH }}static/js/bootstrap.min.js"></script>
+    <script src="{{ BASE_PATH }}static/js/bootstrap-editable.min.js"></script>
+    <script src="{{ BASE_PATH }}static/js/bootstrap3-typeahead.js"></script>
+    <script src="{{ BASE_PATH }}static/js/todo.js"></script>
+
+    <script>
+        var HOST = '{{ HOST }}';
+        var PORT = '{{ PORT }}';
+        var BASE_PATH = '{{ BASE_PATH }}';
+    </script>
+
 </head>
 
 <body>
@@ -35,6 +44,7 @@
 
             <h2>done.txt</h2>
             <form id="done-source">
+                <!--  readonly="readonly" style="background: #DDD;" disabled="disabled" -->
                 <textarea rows="8" cols="40">{{ done }}</textarea>
                 <input type="submit" value="Modifier" />
             </form>
@@ -57,19 +67,21 @@
                     </p>
                 {% endif %}
 
-                <div class="dropdown">
-                    <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown">
-                        Selection: {{ todo_name }}
-                        <span class="caret"></span>
-                    </button>
-                    <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
-                        {% for dir, name in todo_files %}
-                            <li role="presentation" class="{% if todo_selected == loop.index0 %}disabled{% endif %}">
-                                <a role="menuitem" tabindex="-1" href="/{{ loop.index0 }}/">{{ name }}</a>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                </div>
+                {% if todo_files|length > 1 %}
+                    <div class="dropdown">
+                        <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown">
+                            Selection: {{ todo_name }}
+                            <span class="caret"></span>
+                        </button>
+                            <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
+                                {% for dir, name in todo_files %}
+                                    <li role="presentation" class="{% if todo_selected == loop.index0 %}disabled{% endif %}">
+                                        <a role="menuitem" tabindex="-1" href="{{ BASE_PATH }}{{ loop.index0 }}/">{{ name }}</a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                    </div>
+                {% endif %}
 
                 {#
                 <select id="todo-selector">
@@ -81,7 +93,7 @@
             </div>
             <div class="col-xs-10" id="todo-content">
                 {% include 'list.html' %}
-                <a href="/{{ todo_selected }}/download/current" id="current-file_link">{{ todo_filename }}</a>
+                <a href="{{ BASE_PATH }}{{ todo_selected }}/download/current" id="current-file_link">{{ todo_filename }}</a>
             </div>
         </div>
 
