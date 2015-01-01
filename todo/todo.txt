@@ -2,3 +2,5 @@
 Classer les context et project ! +tips +astuce
 (A) Push pour recevoir les modifications du fichier en live +todo +feature
 (D) Gérer les due +todo due:2014-10-01
+Bug lorsque qu'on met un mot suivi d'un + ou @, ex: RaspberryB+ +bug
+Bug lorsque l'on veut marquer comme fait une ligne quand on est en mode filtrage +bug
