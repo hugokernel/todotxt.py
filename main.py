@@ -96,7 +96,7 @@ def home(todo=None):
     return {
         'HOST':             HOST,
         'PORT':             PORT,
-        'BASE_PATH':         BASE_PATH,
+        'BASE_PATH':        BASE_PATH,
         'todos':            todos,
         'contexts':         contexts, 
         'projects':         projects, 
@@ -123,7 +123,7 @@ def list_get(todo=None):
 def contexts_get(todo=None):
     global t
     t.load()
-    return { 'contexts': t.contexts, 'BASE_PATH': BASE_PATH }
+    return { 'contexts': t.contexts, 'BASE_PATH': BASE_PATH, 'todo_selected': todo_selected }
 
 @route(BASE_PATH + 'projects/get', name='projectsget')
 @route(BASE_PATH + '<todo>/projects/get')
@@ -132,7 +132,7 @@ def contexts_get(todo=None):
 def projects_get(todo=None):
     global t
     t.load()
-    return { 'projects': t.projects, 'BASE_PATH': BASE_PATH }
+    return { 'projects': t.projects, 'BASE_PATH': BASE_PATH, 'todo_selected': todo_selected }
 
 @route(BASE_PATH + 'filter/<filters>', name='filter')
 @route(BASE_PATH + '<todo>/filter/<filters>')
@@ -151,6 +151,38 @@ def filter(filters, todo=None):
         todo_list.append((item[0], item[1] if len(item) > 1 else item[0]))
 
     return {
+        'BASE_PATH':            BASE_PATH,
+        'todos':                todos,
+        'contexts':             t.contexts,
+        'projects':             t.projects,
+        'filters':              filters,
+        'todo_files':           todo_list,
+        'todo_filename':        os.path.basename(t.todo_file),
+        'todo_selected':        todo_selected,
+        'todo_name':            todo_name,
+        'projects_filtered':    t.projects_filtered,
+        'contexts_filtered':    t.contexts_filtered,
+        'source':               ''.join(t.read())
+    }
+
+'''
+@route(BASE_PATH + 'filterQ/<filters>', name='filter')
+@route(BASE_PATH + '<todo>/filterQ/<filters>')
+@jinja2_view('list.html', template_lookup=['templates'])
+@Helper.loader
+def filter(filters, todo=None):
+    if filters[0] == '@':
+        todos = t.load(contexts=[ filters[1:] ])
+    elif filters[0] == '+':
+        todos = t.load(projects=[ filter for filter in filters.split('+') if filter ])
+    else:
+        todos = t.load()
+
+    todo_list = []
+    for item in Helper.list():
+        todo_list.append((item[0], item[1] if len(item) > 1 else item[0]))
+    print('here')
+    return {
         'BASE_PATH':             BASE_PATH,
         'todos':                todos,
         'contexts':             t.contexts,
@@ -164,6 +196,7 @@ def filter(filters, todo=None):
         'contexts_filtered':    t.contexts_filtered,
         'source':               ''.join(t.read())
     }
+'''
 
 def is_ajax():
     return request.headers.get('X-Requested-With') == 'XMLHttpRequest'

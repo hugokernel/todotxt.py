@@ -153,6 +153,7 @@ class Todo:
                         break
 
                 if not found:
+                    count += 1
                     continue
 
             if projects:
@@ -163,6 +164,7 @@ class Todo:
                         break
 
                 if not found:
+                    count += 1
                     continue
 
             out.append(line)
@@ -209,6 +211,8 @@ class Todo:
         elif self.project_order == 1:
             self.projects = sorted(self.projects.items(), key=lambda x: x[1], reverse=True)
 
+        for l in out:
+            print(l.line, l.text)
         return out
 
     def get_data(*args, **kwargs):

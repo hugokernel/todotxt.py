@@ -30,3 +30,4 @@ Coucou due:2014-01-01 faire ceci !
 2014-10-30 (A) Faire le ménage dans la configuration avec les TODO_FILE et TODO_FILES
 2014-10-30 (B) Si on a qu'un seul fichier dans TODO_FILES, ne pas afficher de select
 2014-10-30 (B) Pouvoir spécifier plusieurs fichier todo, si la variable de conf est un tuple, afficher un select sur le gui +todo +idea
+2015-01-07 Bug lorsque l'on veut marquer comme fait une ligne quand on est en mode filtrage +bug

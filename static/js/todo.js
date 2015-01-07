@@ -19,7 +19,13 @@ $(document).ready(function() {
     }
 
     getUrl = function(url) {
-        return BASE_PATH + url;
+        out = ''
+        if (TODO_SELECTED) {
+            out = BASE_PATH + TODO_SELECTED + '/' + url;
+        } else {
+            out = BASE_PATH + url;
+        }
+        return out;
     };
 
     reload = function() {
@@ -29,8 +35,16 @@ $(document).ready(function() {
     };
 
     refreshList = function() {
+        /*
+        filter = getFilter();
+        if (filter) {
+            url = getUrl('filterQ/' + filter);
+        } else {
+            url = getUrl('list/get');
+        }
+        */
         $.ajax({
-            url:    getUrl('list/get'),
+            url:   getUrl('list/get'), 
             success:    function(data) {
                 $('#todo-list').replaceWith(data);
                 live();
@@ -120,7 +134,8 @@ $(document).ready(function() {
             { value: 'bb', text: 'BB' },
         ],
         success: function(response, newValue) {
-            reload();
+            //reload();
+            window.location = window.location;
         },
     };
         
@@ -185,12 +200,21 @@ $(document).ready(function() {
         $(this).children('.link-action').hide();
     });
 
+    getFilter = function() {
+        filterUrl = 'filter/';
+        pos = window.location.pathname.indexOf(filterUrl);
+        if (pos > 0) {
+            return window.location.pathname.substr(pos + filterUrl.length);
+        } else {
+            return false;
+        }
+    };
+
     $('#contexts, #projects').on('click', 'a', function(e) {
         filterUrl = 'filter/';
         filter = $(this).find('span').data('value');
         if (e.ctrlKey) {
-            isFilterUrl = window.location.pathname.indexOf(filterUrl) > 0;
-            if (isFilterUrl) {
+            if (getFilter()) {
                 // Remove filter
                 pos = window.location.pathname.indexOf(filter)
                 if (pos > 0) {
@@ -241,7 +265,8 @@ $(document).ready(function() {
                 $.ajax({
                     url:    getUrl('mark_as_done/' + line + '/' + hash),
                     success:    function(data) {
-                        reload()
+                        //reload()
+                        window.location = window.location;
                     }
                 });
 
@@ -268,7 +293,8 @@ $(document).ready(function() {
                 $.ajax({
                     url:    getUrl('delete/' + line + '/' + hash),
                     success:    function(data) {
-                        reload()
+                        //reload()
+                        window.location = window.location;
                     }
                 });
             });
