@@ -3,4 +3,6 @@ Classer les context et project ! +tips +astuce
 (A) Push pour recevoir les modifications du fichier en live +todo +feature
 (D) Gérer les due +todo due:2014-10-01
 Bug lorsque qu'on met un mot suivi d'un + ou @, ex: RaspberryB+ +bug
- Faire en sorte que la fonction js reload() recharge bien même lorsqu'un filtre est sélectionné pour éviter de recharger toute la page +bug
+Faire en sorte que la fonction js reload() recharge bien même lorsqu'un filtre est sélectionné pour éviter de recharger toute la page +bug
+Lorsque l'on marque une ligne comme faite, la laisser barrer pendant un temps prédéterminé (24h) et ajouter un bouton clear pour cacher les lignes supprimées
+
